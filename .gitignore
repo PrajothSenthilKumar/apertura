@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+data/pages/
+data/qdrant/
+*.egg-info/
+.DS_Store
