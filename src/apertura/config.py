@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # C:/poppler/poppler-24.08.0/Library/bin
     # Leave unset on macOS/Linux where poppler is on PATH.
     poppler_path: str | None = None
+    # Answerer (Claude vision)
+    anthropic_api_key: str | None = None
+    answer_model: str = "claude-sonnet-4-6"
+    top_k_pages: int = 3
 
 
 @lru_cache

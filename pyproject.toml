@@ -4,9 +4,9 @@ version = "0.1.0"
 description = "Multimodal document intelligence (visual RAG) over complex PDFs"
 requires-python = ">=3.10"
 dependencies = [
-    "colpali-engine>=0.3.1",
+    "colpali-engine==0.3.9",
     "qdrant-client>=1.12.0",
-    "transformers>=4.45.0",
+    "transformers>=4.50.0,<4.51.0",
     "torch",
     "pdf2image",
     "pillow",
@@ -14,6 +14,7 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "httpx",
+    "anthropic",
 ]
 
 [build-system]

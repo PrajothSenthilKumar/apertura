@@ -4,7 +4,7 @@ from PIL import Image
 # For ColQwen2.5 (vidore/colqwen2.5-v0.2), swap these two imports for
 # `from colpali_engine.models import ColQwen2_5, ColQwen2_5_Processor`
 # and update the class references below.
-from colpali_engine.models import ColQwen2, ColQwen2Processor
+from colpali_engine.models import ColQwen2_5, ColQwen2_5_Processor
 
 from apertura.config import get_settings
 
@@ -28,12 +28,12 @@ class Embedder:
         self.device = _resolve_device(settings.device)
         dtype = torch.bfloat16 if self.device != "cpu" else torch.float32
 
-        self.model = ColQwen2.from_pretrained(
+        self.model = ColQwen2_5.from_pretrained(
             settings.colpali_model,
             torch_dtype=dtype,
             device_map=self.device,
         ).eval()
-        self.processor = ColQwen2Processor.from_pretrained(settings.colpali_model)
+        self.processor = ColQwen2_5_Processor.from_pretrained(settings.colpali_model, max_num_visual_tokens=768)
 
     @torch.no_grad()
     def embed_images(self, images: list[Image.Image]) -> list[list[list[float]]]:
