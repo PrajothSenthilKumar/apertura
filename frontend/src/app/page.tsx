@@ -181,7 +181,7 @@ export default function Home() {
                 Sources: pages {result.pages.join(", ")}
               </span>
             </div>
-            <p className="text-gray-100 leading-relaxed text-base whitespace-pre-wrap">{result.answer.replace(/\*\*/g, "")}</p>
+            <p className="text-gray-100 leading-relaxed text-base whitespace-pre-wrap">{result.answer.replace(/#{1,3} /g, "").replace(/\|[-| ]+\|/g, "").replace(/^\|/gm, "").replace(/\|$/gm, "").replace(/\*\*/g, "")}</p>
             <div className="pt-2 border-t border-gray-800">
               <p className="text-xs text-gray-500 mb-3">Retrieved pages</p>
               <div className="flex gap-3 flex-wrap">
