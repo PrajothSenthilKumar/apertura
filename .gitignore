@@ -7,3 +7,6 @@ data/pages/
 data/qdrant/
 *.egg-info/
 .DS_Store
+
+frontend/.next/
+frontend/node_modules/
