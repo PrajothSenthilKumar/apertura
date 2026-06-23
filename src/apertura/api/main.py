@@ -18,6 +18,7 @@ from apertura.config import get_settings
 from apertura.ingestion.embedder import Embedder
 from apertura.ingestion.pipeline import ingest_pdf
 from apertura.ingestion.vector_store import VectorStore
+from apertura.router.classifier import QueryType, classify_query
 
 # ── shared singletons loaded once at startup ──────────────────────────────────
 _embedder: Embedder | None = None
@@ -56,6 +57,7 @@ class QueryResponse(BaseModel):
     pages: list[int]
     image_paths: list[str]
     doc_id: str
+    query_type: str
 
 
 class IngestResponse(BaseModel):
@@ -86,7 +88,7 @@ async def ingest(file: UploadFile = File(...)):
 def query(req: QueryRequest):
     """Retrieve relevant pages then ask Claude to answer from the images."""
     settings = get_settings()
-
+    query_type = classify_query(req.question)
     query_vec = _embedder.embed_query(req.question)
     hits = _store.search(query_vec, limit=settings.top_k_pages)
 
@@ -103,4 +105,5 @@ def query(req: QueryRequest):
         pages=page_nums,
         image_paths=page_paths,
         doc_id=req.doc_id,
+        query_type=query_type.value,
     )

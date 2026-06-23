@@ -1,0 +1,194 @@
+# Apertura golden evaluation set — Apple Inc. Q1 2026 Form 10-Q
+# Each entry: question, expected answer fragment, answer_page (ground truth page)
+# question_type: "table" | "chart" | "text"
+# These drive both the RAGAS eval and the text-RAG baseline comparison.
+
+questions:
+  # ── Income statement (page 4) ──────────────────────────────────────────────
+  - id: q01
+    question: "What were Apple's total net sales for the quarter ended December 27 2025?"
+    expected_fragment: "143,756"
+    ground_truth_page: 4
+    question_type: table
+
+  - id: q02
+    question: "What was Apple's net income for Q1 2026?"
+    expected_fragment: "42,097"
+    ground_truth_page: 4
+    question_type: table
+
+  - id: q03
+    question: "What was Apple's gross margin for the quarter?"
+    expected_fragment: "69,231"
+    ground_truth_page: 4
+    question_type: table
+
+  - id: q04
+    question: "How much did Apple spend on research and development in Q1 2026?"
+    expected_fragment: "10,887"
+    ground_truth_page: 4
+    question_type: table
+
+  - id: q05
+    question: "What was Apple's operating income for the three months ended December 27 2025?"
+    expected_fragment: "50,852"
+    ground_truth_page: 4
+    question_type: table
+
+  - id: q06
+    question: "What were the basic and diluted earnings per share?"
+    expected_fragment: "2.85"
+    ground_truth_page: 4
+    question_type: table
+
+  # ── Revenue by product (page 9) ────────────────────────────────────────────
+  - id: q07
+    question: "What was iPhone net sales for the quarter ended December 27 2025?"
+    expected_fragment: "85,269"
+    ground_truth_page: 9
+    question_type: table
+
+  - id: q08
+    question: "What were Mac net sales in Q1 2026?"
+    expected_fragment: "8,386"
+    ground_truth_page: 9
+    question_type: table
+
+  - id: q09
+    question: "What were Services net sales for the quarter?"
+    expected_fragment: "30,013"
+    ground_truth_page: 9
+    question_type: table
+
+  - id: q10
+    question: "What were iPad net sales in the first quarter of fiscal 2026?"
+    expected_fragment: "8,595"
+    ground_truth_page: 9
+    question_type: table
+
+  # ── Balance sheet (page 6) ─────────────────────────────────────────────────
+  - id: q11
+    question: "What were Apple's total assets as of December 27 2025?"
+    expected_fragment: "379,297"
+    ground_truth_page: 6
+    question_type: table
+
+  - id: q12
+    question: "What was Apple's cash and cash equivalents at end of quarter?"
+    expected_fragment: "45,317"
+    ground_truth_page: 6
+    question_type: table
+
+  - id: q13
+    question: "What was total shareholders equity at December 27 2025?"
+    expected_fragment: "88,190"
+    ground_truth_page: 6
+    question_type: table
+
+  # ── Cash flow (page 8) ─────────────────────────────────────────────────────
+  - id: q14
+    question: "How much cash did Apple generate from operating activities in Q1 2026?"
+    expected_fragment: "53,925"
+    ground_truth_page: 8
+    question_type: table
+
+  - id: q15
+    question: "How much did Apple spend on share repurchases during the quarter?"
+    expected_fragment: "24,701"
+    ground_truth_page: 8
+    question_type: table
+
+  - id: q16
+    question: "What were proceeds from maturities of marketable securities?"
+    expected_fragment: "7,510"
+    ground_truth_page: 8
+    question_type: table
+
+  # ── Segment table (pages 15 & 17) ──────────────────────────────────────────
+  - id: q17
+    question: "What were Americas net sales for the quarter?"
+    expected_fragment: "58,529"
+    ground_truth_page: 15
+    question_type: table
+
+  - id: q18
+    question: "What were Greater China net sales and how did they change year over year?"
+    expected_fragment: "25,526"
+    ground_truth_page: 17
+    question_type: table
+
+  - id: q19
+    question: "What was Europe net sales growth percentage year over year?"
+    expected_fragment: "13"
+    ground_truth_page: 17
+    question_type: table
+
+  - id: q20
+    question: "What was Japan net sales for Q1 2026?"
+    expected_fragment: "9,413"
+    ground_truth_page: 17
+    question_type: table
+
+  # ── Gross margin table (page 19) ───────────────────────────────────────────
+  - id: q21
+    question: "What was Apple's Products gross margin percentage in Q1 2026?"
+    expected_fragment: "40.7"
+    ground_truth_page: 19
+    question_type: table
+
+  - id: q22
+    question: "What was Apple's Services gross margin percentage?"
+    expected_fragment: "76.5"
+    ground_truth_page: 19
+    question_type: table
+
+  - id: q23
+    question: "What was the total gross margin percentage for Q1 2026?"
+    expected_fragment: "48.2"
+    ground_truth_page: 19
+    question_type: table
+
+  # ── Tax (page 20) ──────────────────────────────────────────────────────────
+  - id: q24
+    question: "What was Apple's effective tax rate for Q1 2026?"
+    expected_fragment: "17.5"
+    ground_truth_page: 20
+    question_type: table
+
+  - id: q25
+    question: "What was the statutory federal income tax rate?"
+    expected_fragment: "21"
+    ground_truth_page: 20
+    question_type: table
+
+  # ── RSU / equity (page 10) ─────────────────────────────────────────────────
+  - id: q26
+    question: "How many RSUs were granted during Q1 2026?"
+    expected_fragment: "61,897"
+    ground_truth_page: 10
+    question_type: table
+
+  - id: q27
+    question: "What was share-based compensation expense in Q1 2026?"
+    expected_fragment: "3,594"
+    ground_truth_page: 14
+    question_type: table
+
+  # ── Text questions (prose pages) ───────────────────────────────────────────
+  - id: q28
+    question: "Which products did Apple announce updates for in Q1 2026?"
+    expected_fragment: "MacBook Pro"
+    ground_truth_page: 16
+    question_type: text
+
+  - id: q29
+    question: "What legal matter involves the European Commission and Apple?"
+    expected_fragment: "Digital Markets Act"
+    ground_truth_page: 22
+    question_type: text
+
+  - id: q30
+    question: "What was the dividend per share declared in Q1 2026?"
+    expected_fragment: "0.26"
+    ground_truth_page: 7
+    question_type: table

@@ -1,0 +1,926 @@
+{
+  "visual_rag": [
+    {
+      "id": "q01",
+      "question": "What were Apple's total net sales for the quarter ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        9,
+        9,
+        17
+      ],
+      "retrieval_hit": false,
+      "answer": "Apple's total net sales for the three months ended December 27, 2025 were **$143,756 million**, representing a 16% increase compared to $124,300 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 6.8
+    },
+    {
+      "id": "q02",
+      "question": "What was Apple's net income for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        5,
+        5,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "Apple's net income for Q1 2026 (three months ended **December 27, 2025**) was **$42,097 million**.",
+      "answer_hit": true,
+      "latency_s": 3.32
+    },
+    {
+      "id": "q03",
+      "question": "What was Apple's gross margin for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        4,
+        4,
+        19
+      ],
+      "retrieval_hit": true,
+      "answer": "For the three months ended **December 27, 2025**, Apple's total gross margin was **$69,231 million**, compared to **$58,275 million** for the three months ended December 28, 2024.\n\nThe total gross margin percentage was **48.2%** (vs. 46.9% in the prior year period).",
+      "answer_hit": true,
+      "latency_s": 4.29
+    },
+    {
+      "id": "q04",
+      "question": "How much did Apple spend on research and development in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        4,
+        4,
+        19
+      ],
+      "retrieval_hit": true,
+      "answer": "Apple spent **$10,887 million** on research and development in Q1 2026 (three months ended December 27, 2025), representing **8%** of total net sales \u2014 a **32% increase** compared to $8,268 million in Q1 2025.",
+      "answer_hit": true,
+      "latency_s": 4.09
+    },
+    {
+      "id": "q05",
+      "question": "What was Apple's operating income for the three months ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        4,
+        4,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "Apple's operating income for the three months ended December 27, 2025 was **$50,852 million**.",
+      "answer_hit": true,
+      "latency_s": 3.12
+    },
+    {
+      "id": "q06",
+      "question": "What were the basic and diluted earnings per share?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        4,
+        4,
+        10
+      ],
+      "retrieval_hit": true,
+      "answer": "For the **three months ended December 27, 2025**:\n- **Basic EPS:** $2.85\n- **Diluted EPS:** $2.84\n\nFor the **three months ended December 28, 2024**:\n- **Basic EPS:** $2.41\n- **Diluted EPS:** $2.40",
+      "answer_hit": true,
+      "latency_s": 3.7
+    },
+    {
+      "id": "q07",
+      "question": "What was iPhone net sales for the quarter ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        18,
+        9
+      ],
+      "retrieval_hit": true,
+      "answer": "iPhone net sales for the three months ended December 27, 2025 were **$85,269 million**.",
+      "answer_hit": true,
+      "latency_s": 3.15
+    },
+    {
+      "id": "q08",
+      "question": "What were Mac net sales in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        18,
+        17
+      ],
+      "retrieval_hit": false,
+      "answer": "Mac net sales for the three months ended December 27, 2025 (Q1 2026) were **$8,386 million**, a decrease of **7%** compared to $8,987 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 4.39
+    },
+    {
+      "id": "q09",
+      "question": "What were Services net sales for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        18,
+        19
+      ],
+      "retrieval_hit": false,
+      "answer": "For the three months ended **December 27, 2025**, Services net sales were **$30,013 million**, up 14% from $26,340 million in the prior-year quarter (December 28, 2024).",
+      "answer_hit": true,
+      "latency_s": 3.85
+    },
+    {
+      "id": "q10",
+      "question": "What were iPad net sales in the first quarter of fiscal 2026?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        18,
+        9
+      ],
+      "retrieval_hit": true,
+      "answer": "iPad net sales for the three months ended December 27, 2025 (Q1 fiscal 2026) were **$8,595 million**, representing a **6%** increase compared to $8,088 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 3.61
+    },
+    {
+      "id": "q11",
+      "question": "What were Apple's total assets as of December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        6,
+        6,
+        9
+      ],
+      "retrieval_hit": true,
+      "answer": "As of December 27, 2025, Apple's **total assets were $379,297 million**.",
+      "answer_hit": true,
+      "latency_s": 2.99
+    },
+    {
+      "id": "q12",
+      "question": "What was Apple's cash and cash equivalents at end of quarter?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        8,
+        8,
+        6
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Balance Sheet, Apple's cash and cash equivalents as of **December 27, 2025** was **$45,317 million**.\n\nThis is also confirmed in the Cash Flow Statement as the ending balance of cash, cash equivalents, and restricted cash and cash equivalents of **$45,317 million**.",
+      "answer_hit": true,
+      "latency_s": 4.48
+    },
+    {
+      "id": "q13",
+      "question": "What was total shareholders equity at December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        6,
+        6,
+        7
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Balance Sheet, Apple's total shareholders' equity at **December 27, 2025** was **$88,190 million**.",
+      "answer_hit": true,
+      "latency_s": 6.84
+    },
+    {
+      "id": "q14",
+      "question": "How much cash did Apple generate from operating activities in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        8,
+        8,
+        20
+      ],
+      "retrieval_hit": true,
+      "answer": "According to the Condensed Consolidated Statements of Cash Flows, Apple generated **$53,925 million** in cash from operating activities for the three months ended December 27, 2025 (Q1 2026).",
+      "answer_hit": true,
+      "latency_s": 3.67
+    },
+    {
+      "id": "q15",
+      "question": "How much did Apple spend on share repurchases during the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        23,
+        23,
+        20
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the document, during the first quarter of 2026, Apple repurchased **$25.0 billion** of its common stock.\n\nAdditionally, the share repurchase table shows a total of **92,894 thousand shares** were purchased during the three months ended December 27, 2025, with an approximate dollar value of **$74,779 million** remaining available under the repurchase program.",
+      "answer_hit": false,
+      "latency_s": 4.52
+    },
+    {
+      "id": "q16",
+      "question": "What were proceeds from maturities of marketable securities?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        8,
+        8,
+        11
+      ],
+      "retrieval_hit": true,
+      "answer": "For the **three months ended December 27, 2025**, proceeds from maturities of marketable securities were **$7,510 million**.\n\nFor the **three months ended December 28, 2024**, they were **$15,967 million**.",
+      "answer_hit": true,
+      "latency_s": 3.88
+    },
+    {
+      "id": "q17",
+      "question": "What were Americas net sales for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 15,
+      "retrieved_pages": [
+        17,
+        17,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "For the three months ended **December 27, 2025**, Americas net sales were **$58,529 million**, compared to **$52,648 million** for the three months ended December 28, 2024 \u2014 an increase of **11%**.",
+      "answer_hit": true,
+      "latency_s": 3.74
+    },
+    {
+      "id": "q18",
+      "question": "What were Greater China net sales and how did they change year over year?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        17,
+        17,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "## Greater China Net Sales\n\n| Period | Net Sales |\n|--------|-----------|\n| Three Months Ended December 27, 2025 | **$25,526 million** |\n| Three Months Ended December 28, 2024 | **$18,513 million** |\n\n**Year-over-year change: +38%** (an increase of ~$7,013 million)\n\nThis growth was driven primarily by **higher net sales of iPhone**, making Greater China the fastest-growing segment in the quarter.",
+      "answer_hit": true,
+      "latency_s": 5.03
+    },
+    {
+      "id": "q19",
+      "question": "What was Europe net sales growth percentage year over year?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        17,
+        17,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the segment table, Europe net sales grew **13%** year over year, from **$33,861 million** (three months ended December 28, 2024) to **$38,146 million** (three months ended December 27, 2025).",
+      "answer_hit": true,
+      "latency_s": 4.35
+    },
+    {
+      "id": "q20",
+      "question": "What was Japan net sales for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        17,
+        17,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "For the three months ended **December 27, 2025** (Q1 2026), Japan net sales were **$9,413 million**, representing a **5%** increase compared to $8,987 million in the prior year period.",
+      "answer_hit": true,
+      "latency_s": 3.6
+    },
+    {
+      "id": "q21",
+      "question": "What was Apple's Products gross margin percentage in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        19,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "Apple's Products gross margin percentage in Q1 2026 (three months ended December 27, 2025) was **40.7%**.",
+      "answer_hit": true,
+      "latency_s": 3.1
+    },
+    {
+      "id": "q22",
+      "question": "What was Apple's Services gross margin percentage?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        19,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "For the three months ended **December 27, 2025**, Apple's Services gross margin percentage was **76.5%**.\n\nFor the comparable prior-year period ended **December 28, 2024**, it was **75.0%**.",
+      "answer_hit": true,
+      "latency_s": 3.59
+    },
+    {
+      "id": "q23",
+      "question": "What was the total gross margin percentage for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        19,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "The total gross margin percentage for Q1 2026 (three months ended **December 27, 2025**) was **48.2%**.",
+      "answer_hit": true,
+      "latency_s": 2.91
+    },
+    {
+      "id": "q24",
+      "question": "What was Apple's effective tax rate for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 20,
+      "retrieved_pages": [
+        20,
+        20,
+        17
+      ],
+      "retrieval_hit": true,
+      "answer": "Apple's effective tax rate for Q1 2026 (three months ended **December 27, 2025**) was **17.5%**.",
+      "answer_hit": true,
+      "latency_s": 2.97
+    },
+    {
+      "id": "q25",
+      "question": "What was the statutory federal income tax rate?",
+      "question_type": "table",
+      "ground_truth_page": 20,
+      "retrieved_pages": [
+        20,
+        20,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "The statutory federal income tax rate was **21%** for both periods \u2014 the three months ended December 27, 2025 and December 28, 2024.",
+      "answer_hit": true,
+      "latency_s": 3.3
+    },
+    {
+      "id": "q26",
+      "question": "How many RSUs were granted during Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 10,
+      "retrieved_pages": [
+        13,
+        13,
+        14
+      ],
+      "retrieval_hit": false,
+      "answer": "According to the RSU activity table, **61,897 thousand RSUs** were granted during the three months ended December 27, 2025 (Q1 2026), at a weighted-average grant-date fair value of **$256.22** per RSU.",
+      "answer_hit": true,
+      "latency_s": 4.02
+    },
+    {
+      "id": "q27",
+      "question": "What was share-based compensation expense in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 14,
+      "retrieved_pages": [
+        14,
+        14,
+        8
+      ],
+      "retrieval_hit": true,
+      "answer": "For the three months ended **December 27, 2025** (Q1 2026), share-based compensation expense was **$3,594 million**.",
+      "answer_hit": true,
+      "latency_s": 3.75
+    },
+    {
+      "id": "q28",
+      "question": "Which products did Apple announce updates for in Q1 2026?",
+      "question_type": "text",
+      "ground_truth_page": 16,
+      "retrieved_pages": [
+        16,
+        18,
+        18
+      ],
+      "retrieval_hit": true,
+      "answer": "According to the document, during the first quarter of 2026, Apple announced updated products for:\n\n- **14-inch MacBook Pro\u00ae**\n- **iPad Pro\u00ae**\n- **Apple Vision Pro\u00ae**",
+      "answer_hit": true,
+      "latency_s": 3.44
+    },
+    {
+      "id": "q29",
+      "question": "What legal matter involves the European Commission and Apple?",
+      "question_type": "text",
+      "ground_truth_page": 22,
+      "retrieved_pages": [
+        22,
+        22,
+        23
+      ],
+      "retrieval_hit": true,
+      "answer": "## Digital Markets Act Investigations\n\nThe European Commission opened **two formal investigations** against Apple under the EU Digital Markets Act (DMA):\n\n1. **Article 5(4) Investigation** (opened March 25, 2024): Relates to how developers may communicate and promote offers to end users for apps distributed through the App Store, and how developers may conclude contracts with end users.\n   - On **April 23, 2025**, the Commission **fined Apple \u20ac500 million** and issued a cease and desist order requiring Apple to remove technical and commercial restrictions preventing developers from steering users to alternative distribution channels outside the App Store.\n\n2. **Article 6(4) Investigation** (opened June 24, 2024): Investigates whether Apple's new contractual requirements for third-party app developers and app marketplaces may violate the DMA.\n   - On **April 23, 2025**, the Commission issued **preliminary findings** in this investigation.\n   - If a final violation determination is made, the Commission can impose fines of **up to 10% of Apple's annual worldwide net sales**.\n\nApple has **appealed** the Commission's Article 5(4) decision and states it \"believes that it complies with the DMA and has continued to make changes to its compliance plan in response to feedback and engagement with the Commission.\"",
+      "answer_hit": true,
+      "latency_s": 9.63
+    },
+    {
+      "id": "q30",
+      "question": "What was the dividend per share declared in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 7,
+      "retrieved_pages": [
+        20,
+        20,
+        7
+      ],
+      "retrieval_hit": true,
+      "answer": "The dividends and dividend equivalents declared per share or RSU in Q1 2026 (three months ended December 27, 2025) was **$0.26**.",
+      "answer_hit": true,
+      "latency_s": 4.43
+    }
+  ],
+  "text_baseline": [
+    {
+      "id": "q01",
+      "question": "What were Apple's total net sales for the quarter ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        18,
+        3,
+        7
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the provided financial data, Apple's total net sales for the quarter ended December 27, 2025 were **$143,756 million**, representing a **16% increase** compared to $124,300 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 2.24
+    },
+    {
+      "id": "q02",
+      "question": "What was Apple's net income for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        5,
+        4,
+        28
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Statements of Operations, Apple's net income for Q1 2026 (three months ended **December 27, 2025**) was **$42,097 million**.",
+      "answer_hit": true,
+      "latency_s": 2.12
+    },
+    {
+      "id": "q03",
+      "question": "What was Apple's gross margin for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        7,
+        3,
+        28
+      ],
+      "retrieval_hit": false,
+      "answer": "The provided context (condensed consolidated statements of shareholders' equity) does not contain income statement data such as gross margin figures. The gross margin for the quarter is **not included in the provided text**.",
+      "answer_hit": false,
+      "latency_s": 1.94
+    },
+    {
+      "id": "q04",
+      "question": "How much did Apple spend on research and development in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        3,
+        18,
+        28
+      ],
+      "retrieval_hit": false,
+      "answer": "The provided text context does not contain information about Apple's research and development spending in Q1 2026. The excerpts provided only cover the Table of Contents, Products and Services Performance, and the CEO/CFO certifications. R&D expense figures would typically appear in the financial statements or Management's Discussion and Analysis sections, which are not included in the provided context.",
+      "answer_hit": false,
+      "latency_s": 2.53
+    },
+    {
+      "id": "q05",
+      "question": "What was Apple's operating income for the three months ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        4,
+        18,
+        5
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Statements of Operations, Apple's operating income for the three months ended December 27, 2025 was **$50,852 million**.",
+      "answer_hit": true,
+      "latency_s": 1.51
+    },
+    {
+      "id": "q06",
+      "question": "What were the basic and diluted earnings per share?",
+      "question_type": "table",
+      "ground_truth_page": 4,
+      "retrieved_pages": [
+        10,
+        4,
+        7
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the financial statements, for the **three months ended December 27, 2025**:\n\n- **Basic EPS: $2.85**\n- **Diluted EPS: $2.84**\n\nFor comparison, the **three months ended December 28, 2024**:\n\n- **Basic EPS: $2.41**\n- **Diluted EPS: $2.40**",
+      "answer_hit": true,
+      "latency_s": 2.15
+    },
+    {
+      "id": "q07",
+      "question": "What was iPhone net sales for the quarter ended December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        3,
+        28
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the provided table, iPhone net sales for the quarter ended December 27, 2025 were **$85,269 million**, representing a **23%** increase compared to $69,138 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 2.71
+    },
+    {
+      "id": "q08",
+      "question": "What were Mac net sales in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        5,
+        15
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the provided table, Mac net sales in Q1 2026 (three months ended December 27, 2025) were **$8,386 million**.",
+      "answer_hit": true,
+      "latency_s": 1.78
+    },
+    {
+      "id": "q09",
+      "question": "What were Services net sales for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        19,
+        18,
+        15
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the provided context, **Services net sales were $30,013 million** for the three months ended December 27, 2025, representing a **14% increase** compared to $26,340 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 2.34
+    },
+    {
+      "id": "q10",
+      "question": "What were iPad net sales in the first quarter of fiscal 2026?",
+      "question_type": "table",
+      "ground_truth_page": 9,
+      "retrieved_pages": [
+        18,
+        3,
+        28
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the provided table, iPad net sales in the first quarter of fiscal 2026 (three months ended December 27, 2025) were **$8,595 million**, representing a **6% increase** compared to $8,088 million in the same quarter of the prior year.",
+      "answer_hit": true,
+      "latency_s": 2.28
+    },
+    {
+      "id": "q11",
+      "question": "What were Apple's total assets as of December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        6,
+        3,
+        8
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Balance Sheet, Apple's total assets as of December 27, 2025 were **$379,297 million**.",
+      "answer_hit": true,
+      "latency_s": 1.77
+    },
+    {
+      "id": "q12",
+      "question": "What was Apple's cash and cash equivalents at end of quarter?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        8,
+        6,
+        3
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Balance Sheet, Apple's cash and cash equivalents at the end of the quarter (December 27, 2025) was **$45,317 million**.",
+      "answer_hit": true,
+      "latency_s": 1.69
+    },
+    {
+      "id": "q13",
+      "question": "What was total shareholders equity at December 27 2025?",
+      "question_type": "table",
+      "ground_truth_page": 6,
+      "retrieved_pages": [
+        10,
+        7,
+        6
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Balance Sheets, total shareholders' equity at December 27, 2025 was **$88,190 million**.",
+      "answer_hit": true,
+      "latency_s": 2.42
+    },
+    {
+      "id": "q14",
+      "question": "How much cash did Apple generate from operating activities in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        8,
+        3,
+        28
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Statements of Cash Flows, Apple generated **$53,925 million** in cash from operating activities for the three months ended December 27, 2025 (Q1 2026), compared to $29,935 million in the same period of the prior year.",
+      "answer_hit": true,
+      "latency_s": 2.56
+    },
+    {
+      "id": "q15",
+      "question": "How much did Apple spend on share repurchases during the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        7,
+        3,
+        4
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the Condensed Consolidated Statements of Shareholders' Equity, Apple spent **$25,194 million** on common stock repurchases during the three months ended December 27, 2025, compared to **$23,476 million** in the same quarter of the prior year.",
+      "answer_hit": false,
+      "latency_s": 2.03
+    },
+    {
+      "id": "q16",
+      "question": "What were proceeds from maturities of marketable securities?",
+      "question_type": "table",
+      "ground_truth_page": 8,
+      "retrieved_pages": [
+        8,
+        11,
+        10
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Statements of Cash Flows, the proceeds from maturities of marketable securities were:\n\n- **Three Months Ended December 27, 2025: $7,510 million**\n- **Three Months Ended December 28, 2024: $15,967 million**",
+      "answer_hit": true,
+      "latency_s": 2.04
+    },
+    {
+      "id": "q17",
+      "question": "What were Americas net sales for the quarter?",
+      "question_type": "table",
+      "ground_truth_page": 15,
+      "retrieved_pages": [
+        15,
+        18,
+        12
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the segment information provided, **Americas net sales were $58,529 million** for the three months ended December 27, 2025.",
+      "answer_hit": true,
+      "latency_s": 1.48
+    },
+    {
+      "id": "q18",
+      "question": "What were Greater China net sales and how did they change year over year?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        15,
+        18,
+        12
+      ],
+      "retrieval_hit": false,
+      "answer": "## Greater China Net Sales\n\n**Q1 2026 (Three Months Ended December 27, 2025):** $25,526 million\n\n**Q1 2025 (Three Months Ended December 28, 2024):** $18,513 million\n\n### Year-over-Year Change\nGreater China net sales **increased by $7,013 million**, representing approximately a **38% increase** year over year ($25,526M vs. $18,513M).\n\nOperating income in Greater China also improved significantly, rising from **$8,160 million** to **$11,792 million**, an increase of approximately **$3,632 million (+45%)**.",
+      "answer_hit": true,
+      "latency_s": 3.7
+    },
+    {
+      "id": "q19",
+      "question": "What was Europe net sales growth percentage year over year?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        15,
+        18,
+        19
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the segment information provided:\n\n- Europe net sales Q1 2026 (Three Months Ended December 27, 2025): **$38,146 million**\n- Europe net sales Q1 2025 (Three Months Ended December 28, 2024): **$33,861 million**\n\nYear-over-year growth: ($38,146 - $33,861) / $33,861 = **~12.7%**",
+      "answer_hit": false,
+      "latency_s": 2.71
+    },
+    {
+      "id": "q20",
+      "question": "What was Japan net sales for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 17,
+      "retrieved_pages": [
+        15,
+        12,
+        18
+      ],
+      "retrieval_hit": false,
+      "answer": "Based on the segment information table, Japan net sales for Q1 2026 (three months ended December 27, 2025) were **$9,413 million**.",
+      "answer_hit": true,
+      "latency_s": 1.67
+    },
+    {
+      "id": "q21",
+      "question": "What was Apple's Products gross margin percentage in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        28,
+        3
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, Apple's Products gross margin percentage in Q1 2026 (three months ended December 27, 2025) was **40.7%**.",
+      "answer_hit": true,
+      "latency_s": 1.54
+    },
+    {
+      "id": "q22",
+      "question": "What was Apple's Services gross margin percentage?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        4,
+        6
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, Apple's Services gross margin percentage was:\n\n- **Q1 2026 (Three months ended December 27, 2025): 76.5%**\n- **Q1 2025 (Three months ended December 28, 2024): 75.0%**",
+      "answer_hit": true,
+      "latency_s": 1.85
+    },
+    {
+      "id": "q23",
+      "question": "What was the total gross margin percentage for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 19,
+      "retrieved_pages": [
+        19,
+        10,
+        15
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, the total gross margin percentage for Q1 2026 (three months ended December 27, 2025) was **48.2%**.",
+      "answer_hit": true,
+      "latency_s": 1.97
+    },
+    {
+      "id": "q24",
+      "question": "What was Apple's effective tax rate for Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 20,
+      "retrieved_pages": [
+        28,
+        5,
+        18
+      ],
+      "retrieval_hit": false,
+      "answer": "The provided context does not contain information about Apple's effective tax rate for Q1 2026. The documents provided include the Sarbanes-Oxley certifications, the Condensed Consolidated Statements of Comprehensive Income, and the Products and Services Performance table, but **none of these include income tax expense or an effective tax rate calculation**.\n\nTo determine the effective tax rate, figures for income before provision for income taxes and the income tax provision would be needed, which are not present in the provided excerpts.",
+      "answer_hit": false,
+      "latency_s": 3.23
+    },
+    {
+      "id": "q25",
+      "question": "What was the statutory federal income tax rate?",
+      "question_type": "table",
+      "ground_truth_page": 20,
+      "retrieved_pages": [
+        20,
+        11,
+        5
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, the statutory federal income tax rate was **21%** for both the three months ended December 27, 2025 and December 28, 2024.",
+      "answer_hit": true,
+      "latency_s": 1.58
+    },
+    {
+      "id": "q26",
+      "question": "How many RSUs were granted during Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 10,
+      "retrieved_pages": [
+        14,
+        21,
+        28
+      ],
+      "retrieval_hit": false,
+      "answer": "The provided context does not include information about the number of RSUs granted during Q1 2026. The only RSU-related figure mentioned is the **total unrecognized compensation cost of $31.5 billion** related to outstanding RSUs as of December 27, 2025, expected to be recognized over a weighted-average period of 2.9 years. No RSU grant quantity data is provided in the excerpts given.",
+      "answer_hit": false,
+      "latency_s": 3.38
+    },
+    {
+      "id": "q27",
+      "question": "What was share-based compensation expense in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 14,
+      "retrieved_pages": [
+        14,
+        10,
+        4
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, share-based compensation expense in Q1 2026 (three months ended December 27, 2025) was **$3,594 million**.",
+      "answer_hit": true,
+      "latency_s": 1.83
+    },
+    {
+      "id": "q28",
+      "question": "Which products did Apple announce updates for in Q1 2026?",
+      "question_type": "text",
+      "ground_truth_page": 16,
+      "retrieved_pages": [
+        3,
+        28,
+        18
+      ],
+      "retrieval_hit": false,
+      "answer": "The provided context does not contain information about product announcements or updates made by Apple in Q1 2026. The document only discusses **net sales performance by category**, explaining increases or decreases in revenue. For example, it notes higher net sales of **Pro models** (iPhone), **iPad and iPad Pro**, and growth in **advertising, App Store, and cloud services**, but these are sales figures, not product announcement disclosures.",
+      "answer_hit": false,
+      "latency_s": 3.3
+    },
+    {
+      "id": "q29",
+      "question": "What legal matter involves the European Commission and Apple?",
+      "question_type": "text",
+      "ground_truth_page": 22,
+      "retrieved_pages": [
+        22,
+        28,
+        3
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the provided context, the European Commission has opened **Digital Markets Act (DMA) investigations** against Apple:\n\n1. **Article 5(4) Investigation** (opened March 25, 2024): Related to how developers may communicate and promote offers to end users for apps distributed through the App Store. On April 23, 2025, the Commission **fined Apple \u20ac500 million** and issued a cease and desist order requiring removal of restrictions preventing developers from steering users to alternative distribution channels. Apple has appealed this decision.\n\n2. **Article 6(4) Investigation** (opened June 24, 2024): Regarding whether Apple's \"new contractual requirements for third-party app developers and app marketplaces may violate the DMA.\" Preliminary findings were issued on April 23, 2025. If a final violation is determined, the Commission may impose **fines up to 10% of Apple's annual worldwide net sales**.",
+      "answer_hit": true,
+      "latency_s": 4.31
+    },
+    {
+      "id": "q30",
+      "question": "What was the dividend per share declared in Q1 2026?",
+      "question_type": "table",
+      "ground_truth_page": 7,
+      "retrieved_pages": [
+        10,
+        7,
+        14
+      ],
+      "retrieval_hit": true,
+      "answer": "Based on the Condensed Consolidated Statements of Shareholders' Equity, the dividends and dividend equivalents declared per share or RSU in Q1 2026 (three months ended December 27, 2025) was **$0.26**.",
+      "answer_hit": true,
+      "latency_s": 1.88
+    }
+  ],
+  "summaries": [
+    {
+      "system": "Apertura Visual RAG",
+      "total_questions": 30,
+      "retrieval_accuracy": 0.833,
+      "answer_hit_rate": 0.967,
+      "table_answer_hit_rate": 0.964,
+      "text_answer_hit_rate": 1.0,
+      "avg_latency_s": 4.15
+    },
+    {
+      "system": "Text-RAG Baseline",
+      "total_questions": 30,
+      "retrieval_accuracy": 0.533,
+      "answer_hit_rate": 0.767,
+      "table_answer_hit_rate": 0.786,
+      "text_answer_hit_rate": 0.5,
+      "avg_latency_s": 2.28
+    }
+  ]
+}
