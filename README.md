@@ -1,99 +1,166 @@
-# Apertura — Multimodal Document Intelligence (Visual RAG)
+# Apertura
 
-Answer natural-language questions over visually complex documents (financial
-filings, technical manuals, scientific papers) by retrieving over **page images**
-instead of extracted text. This preserves tables, charts, and layout that
-text-extraction RAG destroys, and lets the system show *which region* of a page
-an answer came from.
+**Multimodal financial document RAG** — answers questions from the charts and tables in your documents, not just the text.
 
-Built around ColQwen2 (visual document retrieval), Qdrant (multi-vector / MaxSim),
-a vision-language answerer, a LangGraph agent pipeline, and a RAGAS + Langfuse
-eval/observability layer.
+Apertura embeds every PDF page as an image using ColQwen2.5, retrieves visually with Qdrant's multi-vector MaxSim index, and answers with Claude vision reading the actual page. A five-node LangGraph pipeline — Router → Retriever → Reranker → Answerer → Verifier — handles every query with full observability via Langfuse.
 
-## Why visual retrieval
+---
 
-The standard RAG recipe — PDF to OCR text to chunks to single-vector embeddings —
-loses exactly the content that matters most in real documents: numbers inside
-charts, nested tables, multi-column layout. ColQwen2 embeds the rendered page
-image directly as a multi-vector representation and scores queries with late
-interaction (MaxSim), beating text pipelines on visually rich content. Because
-the embeddings are multi-vector, the index must support multi-vector storage —
-hence Qdrant rather than single-vector pgvector.
+## Results
+
+Evaluated on a 30-question golden set against Apple's Q1 2026 Form 10-Q:
+
+| System | Answer Accuracy | Table Questions | Retrieval Accuracy |
+|---|---|---|---|
+| Apertura (visual RAG) | **96.7%** | **96.4%** | 83.3% |
+| Text-RAG baseline | 76.7% | 78.6% | 53.3% |
+
+**+17.8% lift on table and chart questions** — the content that text extraction destroys.
+
+---
 
 ## Architecture
 
 ```
-Frontend (Next.js / Vercel)
-        |
-FastAPI gateway
-        |
-LangGraph supervisor  (Router -> Retriever -> Reranker -> Answerer -> Verifier)
-        |                              |
-        v                              v
-Qdrant index (ColQwen2 multi-vectors)  VLM answerer (Claude / GPT-4o vision)
-
-Ingestion (offline):  Documents (SEC / arXiv) -> Lambda (render + ColQwen2 embed) -> Qdrant
-Observability:        Langfuse traces + cost  |  RAGAS sampling  |  DeepEval CI gate
+┌─────────────────────────────────────────────────────────────┐
+│                        Next.js UI                           │
+│          Upload PDF · Ask questions · View citations        │
+└─────────────────────┬───────────────────────────────────────┘
+                      │ HTTP
+┌─────────────────────▼───────────────────────────────────────┐
+│                   FastAPI Gateway                           │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
+│              LangGraph Pipeline                             │
+│                                                             │
+│  ┌────────┐  ┌───────────┐  ┌──────────┐                   │
+│  │ Router │→ │ Retriever │→ │ Reranker │                   │
+│  └────────┘  └───────────┘  └──────────┘                   │
+│   classify    ColQwen2.5      deduplicate                   │
+│   question    + Qdrant        + reorder                     │
+│                                    │                        │
+│               ┌────────────────────▼────────┐              │
+│               │        Answerer             │              │
+│               │   Claude vision reads       │              │
+│               │   retrieved page images     │              │
+│               └────────────────────┬────────┘              │
+│                                    │                        │
+│               ┌────────────────────▼────────┐              │
+│               │        Verifier             │              │
+│               │  confidence check — retry   │              │
+│               │  if confidence < 0.6        │              │
+│               └─────────────────────────────┘              │
+└─────────────────────────────────────────────────────────────┘
+                      │
+       ┌──────────────┼──────────────┐
+       │              │              │
+┌──────▼──────┐ ┌─────▼─────┐ ┌────▼────┐
+│   Qdrant    │ │    S3 /   │ │Langfuse │
+│multi-vector │ │local pages│ │ traces  │
+└─────────────┘ └───────────┘ └─────────┘
 ```
 
-## Milestone 1 (this repo): ingestion + retrieval
+**Why visual retrieval beats text extraction:** ColQwen2.5 embeds the rendered page image directly, preserving the layout, tables, and charts that OCR destroys. Qdrant stores one multi-vector representation per page and scores queries with late-interaction MaxSim — the same algorithm as ColBERT.
 
-Render a PDF to page images, embed each page with ColQwen2, store the
-multi-vectors in Qdrant, and run a retrieval smoke test.
+---
 
-### Prerequisites
+## Tech Stack
 
-- Python 3.10+
-- Docker (for Qdrant)
-- `poppler` for `pdf2image`:
-  - macOS: `brew install poppler`
-  - Debian/Ubuntu: `sudo apt-get install poppler-utils`
-- A GPU helps a lot for embedding; CPU works for a handful of pages.
+| Layer | Technology |
+|---|---|
+| Visual retrieval model | ColQwen2.5 (`vidore/colqwen2.5-v0.2`) |
+| Vector database | Qdrant (multi-vector, MaxSim) |
+| Agent orchestration | LangGraph 5-node pipeline |
+| Vision answerer | Claude (`claude-sonnet-4-6`) |
+| Query router | Claude Haiku (zero-shot classification) |
+| API | FastAPI |
+| PDF rendering | pdf2image + poppler |
+| Frontend | Next.js + Tailwind CSS |
+| Observability | Langfuse |
+| Eval framework | Custom golden set + text-RAG baseline |
+| Infra (next) | Docker · Kubernetes · AWS Lambda |
 
-### Setup
+---
+
+## Setup
+
+**Prerequisites:** Python 3.12, Docker Desktop, poppler, Node.js 18+
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+# 1. Clone and install
+git clone https://github.com/PrajothSenthilKumar/apertura
+cd apertura
+python -m venv .venv && .venv\Scripts\activate   # Windows
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 pip install -e .
+pip install python-multipart langfuse langgraph
+
+# 2. Configure
 cp .env.example .env
+# Add: ANTHROPIC_API_KEY=sk-ant-...
 
-# start Qdrant
+# 3. Start Qdrant
 docker compose up -d
+
+# 4. Start backend (loads ColQwen2.5 once, stays in memory)
+python scripts/serve.py
+
+# 5. Start frontend
+cd frontend && npm install && npm run dev
 ```
 
-### Ingest a document
+Open `http://localhost:3000`, upload a PDF, ask questions.
 
-Grab a real filing (any 10-K PDF from SEC EDGAR works), then:
+---
+
+## Ingesting documents
 
 ```bash
-python scripts/ingest.py path/to/filing.pdf --doc-id acme-10k-2024
+python scripts/ingest.py path/to/filing.pdf --doc-id apple-10q
 ```
 
-### Search it
+Good sources: SEC EDGAR 10-Qs and annual reports, company investor-relations earnings decks.
+
+---
+
+## Running the eval
 
 ```bash
-python scripts/search.py "What was Q3 free cash flow?"
+# Full comparison: visual RAG vs text-RAG baseline (30 questions, ~15 min)
+python scripts/run_eval.py --pdf 10QQ12026.pdf --doc-id apple-10q
+
+# Fast CI gate: 10 questions, fails if accuracy drops below 80%
+python scripts/run_ci_eval.py --pdf 10QQ12026.pdf
 ```
 
-You'll get the top matching pages with scores and the saved page-image paths —
-those images are what the answerer (milestone 2) will read.
+---
 
-## Roadmap
+## Observability (Langfuse)
 
-- [x] **M1** Ingestion: PDF -> ColQwen2 -> Qdrant, plus retrieval smoke test
-- [ ] **M2** Answerer: pass matched page images to a vision LLM; FastAPI `/query`
-- [ ] **M3** Eval harness: golden set + RAGAS, plus a text-RAG baseline to
-      quantify the lift on table/chart questions
-- [ ] **M4** LangGraph agents: router, reranker, verifier with a confidence loop
-- [ ] **M5** Frontend: Next.js upload + answer + highlighted source region
-- [ ] **M6** LLMOps: Langfuse tracing + cost, DeepEval CI gate, Grafana dashboard
-- [ ] **M7** Packaging: Dockerized services, K8s manifests, Lambda ingestion, S3
+Add to `.env`:
+```
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+```
 
-## Notes
+Every pipeline run is traced with per-agent latency, token cost, confidence score, and a link back to the source pages. Visit `https://cloud.langfuse.com` to view dashboards.
 
-- Default model `vidore/colqwen2-v1.0` runs out of the box. For the newer SOTA,
-  set `COLPALI_MODEL=vidore/colqwen2.5-v0.2` and switch the imports in
-  `src/apertura/ingestion/embedder.py` to `ColQwen2_5` / `ColQwen2_5_Processor`.
-- At scale, mean-pool the page multi-vectors for a fast first-stage search and
-  rerank the top candidates with the full vectors; add binary/int8 quantization
-  to cut index size. Out of scope for M1.
+---
+
+## Project structure
+
+```
+apertura/
+├── src/apertura/
+│   ├── agents/          LangGraph pipeline (state, nodes, pipeline, observability)
+│   ├── api/             FastAPI gateway + static file serving
+│   ├── answer/          Claude vision answerer
+│   ├── eval/            Eval harness + text-RAG baseline
+│   ├── ingestion/       PDF render → ColQwen2.5 → Qdrant
+│   └── router/          Query classifier (visual vs text)
+├── frontend/            Next.js UI
+├── scripts/             CLI tools (ingest, serve, ask, eval)
+├── eval/                Golden set YAML + results JSON
+└── docker-compose.yml   Qdrant
+```
