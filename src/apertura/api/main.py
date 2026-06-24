@@ -80,6 +80,57 @@ class IngestResponse(BaseModel):
 def health():
     return {"status": "ok"}
 
+@app.get("/suggest-questions/{doc_id}")
+def suggest_questions(doc_id: str):
+    """Generate 5 relevant sample questions for the indexed document."""
+    from anthropic import Anthropic
+    settings = get_settings()
+    client = Anthropic(api_key=settings.anthropic_api_key)
+
+    # retrieve a couple of pages to give Claude context about the document
+    query_vec = _embedder.embed_query("revenue income financial results")
+    hits = _store.search(query_vec, limit=2)
+    if not hits:
+        return {"questions": [
+            "What was total revenue for the quarter?",
+            "What was net income?",
+            "What was the gross margin?",
+            "What was earnings per share?",
+            "What is the outlook for next quarter?",
+        ]}
+
+    import base64
+    content = []
+    for h in hits:
+        with open(h.payload["image_path"], "rb") as f:
+            data = base64.standard_b64encode(f.read()).decode()
+        content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
+
+    content.append({"type": "text", "text": (
+        "Based on these document pages, generate exactly 5 specific, useful questions "
+        "an analyst would ask about this document. Return ONLY a JSON array of 5 strings, "
+        "no other text. Example: [\"What was revenue?\", ...]"
+    )})
+
+    resp = client.messages.create(
+        model=settings.answer_model,
+        max_tokens=300,
+        messages=[{"role": "user", "content": content}],
+    )
+    import json
+    raw = "".join(b.text for b in resp.content if b.type == "text").strip()
+    try:
+        questions = json.loads(raw)
+        return {"questions": questions[:5]}
+    except Exception:
+        return {"questions": [
+            "What was total revenue for the quarter?",
+            "What was net income?",
+            "What was the gross margin?",
+            "What was earnings per share?",
+            "What is the outlook for next quarter?",
+        ]}
+
 
 @app.post("/ingest", response_model=IngestResponse)
 async def ingest(file: UploadFile = File(...)):

@@ -33,13 +33,13 @@ export default function Home() {
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const SAMPLE_QUESTIONS = [
-    "What was total net sales for the quarter?",
-    "Break down net sales by reportable segment.",
-    "What was iPhone revenue and how did it change year over year?",
-    "What was the effective tax rate?",
-    "How much did Apple spend on R&D?",
-  ];
+  const [sampleQuestions, setSampleQuestions] = useState<string[]>([
+    "What was total revenue for the quarter?",
+    "What was net income?",
+    "What was the gross margin percentage?",
+    "What was earnings per share?",
+    "What is the outlook for next quarter?",
+  ]);
 
   async function handleUpload(f: File) {
     setIngesting(true);
@@ -54,6 +54,11 @@ export default function Home() {
       if (!res.ok) throw new Error(data.detail || "Ingest failed");
       setDocId(data.doc_id);
       setIngestMsg(`✓ ${data.pages} pages indexed — ${data.doc_id}`);
+
+      // fetch document-specific questions
+      const qRes = await fetch(`${API}/suggest-questions/${data.doc_id}`);
+      const qData = await qRes.json();
+      if (qData.questions?.length) setSampleQuestions(qData.questions);
     } catch (e: any) {
       setError(e.message);
       setIngestMsg("");
@@ -158,7 +163,7 @@ export default function Home() {
           <div>
             <p className="text-xs text-gray-500 mb-3">Try a question</p>
             <div className="flex flex-wrap gap-2">
-              {SAMPLE_QUESTIONS.map(q => (
+              {sampleQuestions.map(q => (
                 <button key={q} onClick={() => handleAsk(q)}
                   className="text-xs px-3 py-2 rounded-lg border border-gray-700 hover:border-teal-600 hover:text-teal-400 transition-colors text-gray-300">
                   {q}
