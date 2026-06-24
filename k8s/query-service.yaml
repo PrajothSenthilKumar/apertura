@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: query-service
+  namespace: apertura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: query-service
+  template:
+    metadata:
+      labels:
+        app: query-service
+    spec:
+      containers:
+        - name: query-service
+          image: apertura/query-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8002
+          env:
+            - name: QDRANT_URL
+              value: "http://qdrant:6333"
+            - name: COLPALI_MODEL
+              value: "vidore/colqwen2.5-v0.2"
+          envFrom:
+            - secretRef:
+                name: apertura-secrets
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "1000m"
+            limits:
+              memory: "8Gi"
+              cpu: "4000m"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: query-service
+  namespace: apertura
+spec:
+  selector:
+    app: query-service
+  ports:
+    - port: 8002
+      targetPort: 8002

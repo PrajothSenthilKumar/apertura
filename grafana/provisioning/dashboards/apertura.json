@@ -1,0 +1,82 @@
+{
+  "title": "Apertura — Visual RAG Observability",
+  "uid": "apertura-main",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Query Volume (queries/min)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{
+        "expr": "rate(apertura_queries_total[1m])",
+        "legendFormat": "queries/min"
+      }]
+    },
+    {
+      "id": 2,
+      "title": "Answer Confidence Distribution",
+      "type": "histogram",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{
+        "expr": "apertura_answer_confidence_bucket",
+        "legendFormat": "{{le}}"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Per-Agent Latency (p50/p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, rate(apertura_agent_latency_seconds_bucket{agent='router'}[5m]))", "legendFormat": "router p50"},
+        {"expr": "histogram_quantile(0.50, rate(apertura_agent_latency_seconds_bucket{agent='retriever'}[5m]))", "legendFormat": "retriever p50"},
+        {"expr": "histogram_quantile(0.50, rate(apertura_agent_latency_seconds_bucket{agent='answerer'}[5m]))", "legendFormat": "answerer p50"},
+        {"expr": "histogram_quantile(0.95, rate(apertura_agent_latency_seconds_bucket{agent='answerer'}[5m]))", "legendFormat": "answerer p95"}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Query Type Split (visual vs text)",
+      "type": "piechart",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+      "targets": [{
+        "expr": "sum by (query_type) (apertura_queries_total)",
+        "legendFormat": "{{query_type}}"
+      }]
+    },
+    {
+      "id": 5,
+      "title": "Verification Rate (verified queries %)",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+      "targets": [{
+        "expr": "sum(apertura_queries_verified_total) / sum(apertura_queries_total) * 100",
+        "legendFormat": "% verified"
+      }],
+      "options": {"minValue": 0, "maxValue": 100}
+    },
+    {
+      "id": 6,
+      "title": "Ingestion Queue (pages pending)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+      "targets": [{
+        "expr": "apertura_ingestion_pages_pending",
+        "legendFormat": "pages pending"
+      }]
+    },
+    {
+      "id": 7,
+      "title": "Total Pages Indexed",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+      "targets": [{
+        "expr": "apertura_pages_indexed_total",
+        "legendFormat": "total pages"
+      }]
+    }
+  ]
+}
