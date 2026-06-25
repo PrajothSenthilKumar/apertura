@@ -8,11 +8,13 @@ def is_modal_enabled() -> bool:
 
 def ingest_via_modal(pdf_bytes: bytes, doc_id: str) -> dict:
     import modal
-    fn = modal.Function.lookup("apertura", "ingest_document")
-    return fn.remote(pdf_bytes, doc_id)
+    with modal.enable_output():
+        f = modal.Function.from_name("apertura", "ingest_document")
+        result = f.remote(pdf_bytes, doc_id)
+    return result
 
 
 def embed_via_modal(question: str) -> list[list[float]]:
     import modal
-    fn = modal.Function.lookup("apertura", "embed_query")
-    return fn.remote(question)
+    f = modal.Function.from_name("apertura", "embed_query")
+    return f.remote(question)
