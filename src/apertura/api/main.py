@@ -54,33 +54,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Apertura", lifespan=lifespan)
 
+from starlette.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://apertura-rho.vercel.app",
-        "https://apertura.vercel.app",
-        "http://localhost:3000",
-        "*",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
 
-from fastapi import Request
-from fastapi.responses import Response
 
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str, request: Request):
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Max-Age": "86400",
-        }
-    )
 
 # Serve page images only in local mode (Render has no persistent disk)
 if not USE_MODAL:
