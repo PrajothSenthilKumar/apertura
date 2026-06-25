@@ -54,6 +54,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Apertura", lifespan=lifespan)
 
+@app.options("/ingest")
+async def options_ingest():
+    return {"ok": True}
+
+@app.options("/query")
+async def options_query():
+    return {"ok": True}
+
+@app.options("/suggest-questions/{doc_id}")
+async def options_suggest(doc_id: str):
+    return {"ok": True}
+
 from starlette.middleware.cors import CORSMiddleware
 
 app.add_middleware(
