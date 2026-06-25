@@ -3,7 +3,6 @@ import os
 
 app = modal.App("apertura")
 
-# Build the container image with all dependencies
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .apt_install("poppler-utils", "libgl1-mesa-glx", "libglib2.0-0")
@@ -24,29 +23,28 @@ image = (
     )
 )
 
-# Store your secrets in Modal — run: modal secret create apertura-secrets
-# with QDRANT_URL, QDRANT_API_KEY, COLPALI_MODEL
+model_volume = modal.Volume.from_name("apertura-model-cache", create_if_missing=True)
+
+
 @app.function(
     image=image,
     gpu="T4",
     timeout=600,
     memory=10240,
     secrets=[modal.Secret.from_name("apertura-secrets")],
-    volumes={"/model-cache": modal.Volume.from_name("apertura-model-cache", create_if_missing=True)},
+    volumes={"/model-cache": model_volume},
 )
 def ingest_document(pdf_bytes: bytes, doc_id: str) -> dict:
-    import os, tempfile
+    import base64, tempfile, uuid
     from pathlib import Path
 
     os.environ["HF_HOME"] = "/model-cache"
     os.environ["TRANSFORMERS_CACHE"] = "/model-cache"
 
-    # inline import so Modal can find them in the container
     from colpali_engine.models import ColQwen2_5, ColQwen2_5_Processor
     import torch
     from pdf2image import convert_from_path
     from qdrant_client import QdrantClient, models
-    import uuid
 
     model_name = os.environ.get("COLPALI_MODEL", "vidore/colqwen2.5-v0.2")
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -64,13 +62,7 @@ def ingest_document(pdf_bytes: bytes, doc_id: str) -> dict:
         pdf_path.write_bytes(pdf_bytes)
         images = convert_from_path(str(pdf_path), dpi=150)
 
-    # Save page images to /tmp for URL serving later
-    pages_dir = Path(f"/tmp/pages/{doc_id}")
-    pages_dir.mkdir(parents=True, exist_ok=True)
-    for i, img in enumerate(images):
-        img.save(pages_dir / f"page_{i+1:04d}.jpg", "JPEG", quality=90)
-
-    # Embed pages
+    # Connect to Qdrant Cloud
     qdrant_url = os.environ["QDRANT_URL"]
     qdrant_key = os.environ.get("QDRANT_API_KEY")
     client = QdrantClient(url=qdrant_url, api_key=qdrant_key)
@@ -88,31 +80,54 @@ def ingest_document(pdf_bytes: bytes, doc_id: str) -> dict:
             ),
         )
 
-    batch_size = 1
-    for start in range(0, len(images), batch_size):
-        chunk = images[start:start + batch_size]
-        with torch.no_grad():
-            batch = processor.process_images(chunk).to(device)
-            outputs = model(**batch)
-        embeddings = [emb.float().cpu().tolist() for emb in outputs]
-
-        for offset, (img, emb) in enumerate(zip(chunk, embeddings)):
-            page_num = start + offset + 1
-            image_path = str(pages_dir / f"page_{page_num:04d}.jpg")
-            client.upsert(
-                collection_name=collection,
-                points=[models.PointStruct(
-                    id=str(uuid.uuid4()),
-                    vector=emb,
-                    payload={
-                        "doc_id": doc_id,
-                        "page_num": page_num,
-                        "image_path": image_path,
-                    },
-                )],
+    # Delete existing pages for this doc to avoid duplicates
+    try:
+        client.delete(
+            collection_name=collection,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[models.FieldCondition(
+                        key="doc_id",
+                        match=models.MatchValue(value=doc_id)
+                    )]
+                )
             )
-        print(f"Embedded pages {start+1}-{min(start+batch_size, len(images))}/{len(images)}")
+        )
+    except Exception:
+        pass
 
+    # Embed and upsert each page
+    for i, img in enumerate(images):
+        page_num = i + 1
+
+        # Convert image to base64 for storage in Qdrant
+        import io
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85)
+        img_b64 = base64.standard_b64encode(buf.getvalue()).decode()
+
+        # Embed with ColQwen2.5
+        with torch.no_grad():
+            batch = processor.process_images([img]).to(device)
+            outputs = model(**batch)
+        emb = outputs[0].float().cpu().tolist()
+
+        client.upsert(
+            collection_name=collection,
+            points=[models.PointStruct(
+                id=str(uuid.uuid4()),
+                vector=emb,
+                payload={
+                    "doc_id": doc_id,
+                    "page_num": page_num,
+                    "image_path": f"data/pages/{doc_id}/page_{page_num:04d}.jpg",
+                    "image_b64": img_b64,
+                },
+            )],
+        )
+        print(f"  Page {page_num}/{len(images)} ingested")
+
+    print(f"Done: {len(images)} pages for {doc_id}")
     return {"doc_id": doc_id, "pages": len(images)}
 
 
@@ -122,10 +137,10 @@ def ingest_document(pdf_bytes: bytes, doc_id: str) -> dict:
     timeout=60,
     memory=10240,
     secrets=[modal.Secret.from_name("apertura-secrets")],
-    volumes={"/model-cache": modal.Volume.from_name("apertura-model-cache", create_if_missing=True)},
+    volumes={"/model-cache": model_volume},
 )
 def embed_query(question: str) -> list[list[float]]:
-    import os, torch
+    import torch
     os.environ["HF_HOME"] = "/model-cache"
     os.environ["TRANSFORMERS_CACHE"] = "/model-cache"
 

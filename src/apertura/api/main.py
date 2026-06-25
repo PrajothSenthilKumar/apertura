@@ -40,7 +40,6 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# ── App + CORS ── middleware MUST be added before any routes ──────────────────
 app = FastAPI(title="Apertura", lifespan=lifespan)
 
 app.add_middleware(
@@ -53,14 +52,12 @@ app.add_middleware(
     max_age=86400,
 )
 
-# Static files only in local mode
 if not USE_MODAL:
     pages_dir = Path("data/pages")
     pages_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/pages", StaticFiles(directory=str(pages_dir)), name="pages")
 
 
-# ── Models ────────────────────────────────────────────────────────────────────
 class QueryRequest(BaseModel):
     question: str
     doc_id: str = "default"
@@ -70,6 +67,7 @@ class QueryResponse(BaseModel):
     answer: str
     pages: list[int]
     image_paths: list[str]
+    image_b64s: list[str] = []
     doc_id: str
     query_type: str
     confidence: float
@@ -83,7 +81,6 @@ class IngestResponse(BaseModel):
     pages: int
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok", "modal_mode": USE_MODAL}
@@ -119,7 +116,8 @@ async def query(req: QueryRequest = None):
     return QueryResponse(
         answer=result.answer,
         pages=[p["page_num"] for p in result.reranked_pages],
-        image_paths=[p["image_path"] for p in result.reranked_pages],
+        image_paths=[p.get("image_path", "") for p in result.reranked_pages],
+        image_b64s=[p.get("image_b64", "") for p in result.reranked_pages],
         doc_id=req.doc_id,
         query_type=result.query_type,
         confidence=result.confidence,
@@ -131,7 +129,6 @@ async def query(req: QueryRequest = None):
 
 @app.get("/suggest-questions/{doc_id}")
 async def suggest_questions(doc_id: str):
-    import base64
     from anthropic import Anthropic
     settings = get_settings()
 
@@ -144,51 +141,66 @@ async def suggest_questions(doc_id: str):
     ]
 
     if USE_MODAL:
+        # Get a page image from Qdrant to generate relevant questions
         try:
-            client = Anthropic(api_key=settings.anthropic_api_key)
-            resp = client.messages.create(
-                model=settings.answer_model,
-                max_tokens=300,
-                messages=[{"role": "user", "content": (
-                    f"Generate exactly 5 specific analyst questions for a financial document "
-                    f"with doc_id '{doc_id}'. Return ONLY a JSON array of 5 strings, no other text."
-                )}],
-            )
-            raw = "".join(b.text for b in resp.content if b.type == "text").strip()
-            return {"questions": json.loads(raw)[:5]}
-        except Exception:
-            return {"questions": GENERIC}
+            import base64
+            from apertura.ingestion.modal_client import embed_via_modal
+            import asyncio, concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, embed_via_modal("revenue financial results"))
+                query_vec = future.result()
 
-    if _embedder is None:
+            hits = _store.search(query_vec, limit=2, doc_id_filter=doc_id)
+            content = []
+            for h in hits:
+                img_b64 = h.payload.get("image_b64", "")
+                if img_b64:
+                    content.append({
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": "image/jpeg", "data": img_b64}
+                    })
+            if content:
+                content.append({"type": "text", "text": (
+                    "Based on these document pages, generate exactly 5 specific analyst questions. "
+                    "Return ONLY a JSON array of 5 strings, no other text."
+                )})
+                client = Anthropic(api_key=settings.anthropic_api_key)
+                resp = client.messages.create(
+                    model=settings.answer_model,
+                    max_tokens=300,
+                    messages=[{"role": "user", "content": content}],
+                )
+                raw = "".join(b.text for b in resp.content if b.type == "text").strip()
+                return {"questions": json.loads(raw)[:5]}
+        except Exception:
+            pass
         return {"questions": GENERIC}
 
+    # Local mode
+    if _embedder is None:
+        return {"questions": GENERIC}
     try:
         query_vec = _embedder.embed_query("revenue income financial results")
         hits = _store.search(query_vec, limit=2, doc_id_filter=doc_id)
-    except Exception:
-        return {"questions": GENERIC}
-
-    if not hits:
-        return {"questions": GENERIC}
-
-    content = []
-    for h in hits:
-        try:
-            with open(h.payload.get("image_path", ""), "rb") as f:
-                data = __import__("base64").standard_b64encode(f.read()).decode()
-            content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
-        except (FileNotFoundError, OSError):
-            continue
-
-    if not content:
-        return {"questions": GENERIC}
-
-    content.append({"type": "text", "text": (
-        "Based on these document pages, generate exactly 5 specific useful questions "
-        "an analyst would ask. Return ONLY a JSON array of 5 strings, no other text."
-    )})
-
-    try:
+        content = []
+        for h in hits:
+            import base64
+            img_b64 = h.payload.get("image_b64", "")
+            if img_b64:
+                content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": img_b64}})
+                continue
+            try:
+                with open(h.payload.get("image_path", ""), "rb") as f:
+                    data = base64.standard_b64encode(f.read()).decode()
+                content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
+            except (FileNotFoundError, OSError):
+                continue
+        if not content:
+            return {"questions": GENERIC}
+        content.append({"type": "text", "text": (
+            "Based on these document pages, generate exactly 5 specific analyst questions. "
+            "Return ONLY a JSON array of 5 strings, no other text."
+        )})
         client = Anthropic(api_key=settings.anthropic_api_key)
         resp = client.messages.create(model=settings.answer_model, max_tokens=300,
                                        messages=[{"role": "user", "content": content}])

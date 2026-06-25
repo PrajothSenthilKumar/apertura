@@ -1,11 +1,8 @@
-"""LangGraph agent nodes.
+"""LangGraph agent nodes — works in both local and cloud (Modal) mode.
 
-Five nodes in order:
-  router    → classify question as visual or text
-  retriever → ColQwen2.5 + Qdrant search
-  reranker  → cross-score and reorder candidates
-  answerer  → Claude vision reads page images
-  verifier  → confidence check, decides whether to retry
+In local mode: reads page images from disk, embeds queries with local GPU.
+In cloud mode: reads image_b64 from Qdrant payload, embeds via Modal GPU.
+All file I/O is wrapped in try/except since images may not exist on server.
 """
 
 from __future__ import annotations
@@ -43,7 +40,7 @@ def retriever_node(state: PipelineState) -> PipelineState:
     t0 = time.time()
     settings = get_settings()
 
-    # Get query embedding — local GPU or Modal cloud
+    # Embed query — local GPU or Modal cloud
     if _embedder is not None:
         query_vec = _embedder.embed_query(state.question)
     elif os.getenv("USE_MODAL", "false").lower() == "true":
@@ -53,15 +50,16 @@ def retriever_node(state: PipelineState) -> PipelineState:
             future = pool.submit(asyncio.run, embed_via_modal(state.question))
             query_vec = future.result()
     else:
-        raise RuntimeError("No embedder available and USE_MODAL is not set")
+        raise RuntimeError("No embedder available")
 
-    # Search Qdrant — use correct positional argument
+    # Search Qdrant
     hits = _store.search(query_vec, limit=settings.top_k_pages + 2)
 
     state.retrieved_pages = [
         {
             "page_num":   h.payload["page_num"],
-            "image_path": h.payload["image_path"],
+            "image_path": h.payload.get("image_path", ""),
+            "image_b64":  h.payload.get("image_b64", ""),
             "doc_id":     h.payload.get("doc_id", ""),
             "score":      h.score,
         }
@@ -96,10 +94,19 @@ def answerer_node(state: PipelineState) -> PipelineState:
     import base64
     from anthropic import Anthropic
     settings = get_settings()
+    client = Anthropic(api_key=settings.anthropic_api_key)
 
-    # Try to load page images (only works in local mode)
     content = []
     for p in state.reranked_pages:
+        # Try base64 from Qdrant payload first (cloud mode)
+        img_b64 = p.get("image_b64", "")
+        if img_b64:
+            content.append({
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/jpeg", "data": img_b64}
+            })
+            continue
+        # Fall back to reading from disk (local mode)
         try:
             with open(p["image_path"], "rb") as f:
                 data = base64.standard_b64encode(f.read()).decode()
@@ -108,23 +115,21 @@ def answerer_node(state: PipelineState) -> PipelineState:
                 "source": {"type": "base64", "media_type": "image/jpeg", "data": data}
             })
         except (FileNotFoundError, OSError):
-            continue  # images not available in cloud mode
+            continue
 
-    # Add question
-    content.append({"type": "text", "text": (
-        f"Answer this question based on the document pages provided. "
-        f"If no images are visible, use your knowledge of the document structure.\n\n"
-        f"Question: {state.question}"
-    )})
+    content.append({
+        "type": "text",
+        "text": (
+            "You are a financial document analyst. Answer the following question using "
+            "ONLY the information visible in the provided document page images. "
+            "Quote exact figures. Be concise.\n\n"
+            f"Question: {state.question}"
+        )
+    })
 
-    client = Anthropic(api_key=settings.anthropic_api_key)
     resp = client.messages.create(
         model=settings.answer_model,
         max_tokens=1024,
-        system=(
-            "You are a financial document analyst. Answer using ONLY information "
-            "visible in the provided pages. Quote exact figures. Be concise."
-        ),
         messages=[{"role": "user", "content": content}],
     )
     state.answer = "".join(b.text for b in resp.content if b.type == "text")
@@ -136,7 +141,8 @@ def answerer_node(state: PipelineState) -> PipelineState:
 _VERIFIER_PROMPT = """Question: {question}
 Answer: {answer}
 
-Is this answer grounded in the document? Reply with JSON only:
+Is this answer grounded in the document pages provided?
+Reply with JSON only (no markdown):
 {{"confidence": <float 0-1>, "grounded": <true|false>, "reason": "<one sentence>"}}"""
 
 
@@ -149,6 +155,13 @@ def verifier_node(state: PipelineState) -> PipelineState:
 
     content = []
     for p in state.reranked_pages:
+        img_b64 = p.get("image_b64", "")
+        if img_b64:
+            content.append({
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/jpeg", "data": img_b64}
+            })
+            continue
         try:
             with open(p["image_path"], "rb") as f:
                 data = base64.standard_b64encode(f.read()).decode()
