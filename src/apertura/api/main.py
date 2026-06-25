@@ -1,29 +1,33 @@
 """Apertura FastAPI gateway.
 
-Loads ColQwen2.5 and the Qdrant client once at startup, then serves:
-  POST /ingest  — index a PDF that has already been uploaded to the server
-  POST /query   — full LangGraph pipeline (router→retriever→reranker→answerer→verifier)
-  GET  /health  — liveness check
+Loads ColQwen2.5 locally (dev) or delegates to Modal GPU (production).
+Serves:
+  POST /ingest              — index a PDF
+  POST /query               — LangGraph pipeline answer
+  GET  /suggest-questions   — sample questions for the document
+  GET  /pages/*             — static page image serving (local only)
+  GET  /health              — liveness check
 """
 
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from apertura.agents.observability import trace_pipeline_run
 from apertura.agents.pipeline import build_pipeline, run_pipeline
-from apertura.api.static import mount_static
 from apertura.config import get_settings
-from apertura.ingestion.embedder import Embedder
 from apertura.ingestion.pipeline import ingest_pdf
 from apertura.ingestion.vector_store import VectorStore
 
-# ── shared singletons loaded once at startup ──────────────────────────────────
-_embedder: Embedder | None = None
+USE_MODAL = os.getenv("USE_MODAL", "false").lower() == "true"
+
+_embedder = None
 _store: VectorStore | None = None
 _graph = None
 
@@ -31,15 +35,17 @@ _graph = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _embedder, _store, _graph
-    from apertura.ingestion.modal_client import is_modal_enabled
     _store = VectorStore()
     _store.ensure_collection()
-    if not is_modal_enabled():
+
+    if not USE_MODAL:
+        from apertura.ingestion.embedder import Embedder
         print("Loading ColQwen2.5 locally …")
         _embedder = Embedder()
     else:
         print("Modal mode — skipping local GPU load …")
         _embedder = None
+
     print("Building LangGraph pipeline …")
     _graph = build_pipeline(_embedder, _store)
     print("Ready.")
@@ -61,10 +67,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-mount_static(app)
+# Serve page images only in local mode (Render has no persistent disk)
+if not USE_MODAL:
+    pages_dir = Path("data/pages")
+    pages_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/pages", StaticFiles(directory=str(pages_dir)), name="pages")
 
 
-# ── request / response models ─────────────────────────────────────────────────
+# ── Models ────────────────────────────────────────────────────────────────────
 class QueryRequest(BaseModel):
     question: str
     doc_id: str = "default"
@@ -87,61 +97,10 @@ class IngestResponse(BaseModel):
     pages: int
 
 
-# ── endpoints ─────────────────────────────────────────────────────────────────
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
-    return {"status": "ok"}
-
-@app.get("/suggest-questions/{doc_id}")
-def suggest_questions(doc_id: str):
-    """Generate 5 relevant sample questions for the indexed document."""
-    from anthropic import Anthropic
-    settings = get_settings()
-    client = Anthropic(api_key=settings.anthropic_api_key)
-
-    # retrieve a couple of pages to give Claude context about the document
-    query_vec = _embedder.embed_query("revenue income financial results")
-    hits = _store.search(query_vec, limit=2)
-    if not hits:
-        return {"questions": [
-            "What was total revenue for the quarter?",
-            "What was net income?",
-            "What was the gross margin?",
-            "What was earnings per share?",
-            "What is the outlook for next quarter?",
-        ]}
-
-    import base64
-    content = []
-    for h in hits:
-        with open(h.payload["image_path"], "rb") as f:
-            data = base64.standard_b64encode(f.read()).decode()
-        content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
-
-    content.append({"type": "text", "text": (
-        "Based on these document pages, generate exactly 5 specific, useful questions "
-        "an analyst would ask about this document. Return ONLY a JSON array of 5 strings, "
-        "no other text. Example: [\"What was revenue?\", ...]"
-    )})
-
-    resp = client.messages.create(
-        model=settings.answer_model,
-        max_tokens=300,
-        messages=[{"role": "user", "content": content}],
-    )
-    import json
-    raw = "".join(b.text for b in resp.content if b.type == "text").strip()
-    try:
-        questions = json.loads(raw)
-        return {"questions": questions[:5]}
-    except Exception:
-        return {"questions": [
-            "What was total revenue for the quarter?",
-            "What was net income?",
-            "What was the gross margin?",
-            "What was earnings per share?",
-            "What is the outlook for next quarter?",
-        ]}
+    return {"status": "ok", "modal_mode": USE_MODAL}
 
 
 @app.post("/ingest", response_model=IngestResponse)
@@ -149,13 +108,11 @@ async def ingest(file: UploadFile = File(...)):
     doc_id = Path(file.filename).stem
     pdf_bytes = await file.read()
 
-    use_modal = os.getenv("USE_MODAL", "false").lower() == "true"
-
-    if use_modal:
+    if USE_MODAL:
         from apertura.ingestion.modal_client import ingest_via_modal
         result = await ingest_via_modal(pdf_bytes, doc_id)
     else:
-        tmp = Path("data/uploads") / f"{doc_id}.pdf"
+        tmp = Path("data/uploads") / file.filename
         tmp.parent.mkdir(parents=True, exist_ok=True)
         tmp.write_bytes(pdf_bytes)
         result = ingest_pdf(tmp, doc_id=doc_id, embedder=_embedder, store=_store)
@@ -164,8 +121,7 @@ async def ingest(file: UploadFile = File(...)):
 
 
 @app.post("/query", response_model=QueryResponse)
-def query(req: QueryRequest):
-    """Run the full LangGraph multi-agent pipeline."""
+async def query(req: QueryRequest):
     if not _graph:
         raise HTTPException(status_code=503, detail="Pipeline not ready.")
 
@@ -187,3 +143,95 @@ def query(req: QueryRequest):
         latencies=result.latencies,
         trace_url=trace_url,
     )
+
+
+@app.get("/suggest-questions/{doc_id}")
+async def suggest_questions(doc_id: str):
+    """Generate document-specific sample questions.
+
+    In Modal/cloud mode: page images aren't on this server, so we
+    generate questions from a text search of Qdrant metadata instead.
+    In local mode: we use the actual page images for better questions.
+    """
+    import base64
+    from anthropic import Anthropic
+    settings = get_settings()
+
+    GENERIC = [
+        "What was total revenue for the quarter and how did it change year over year?",
+        "What was net income?",
+        "What was the gross margin percentage?",
+        "What was earnings per share?",
+        "What is the revenue outlook for next quarter?",
+    ]
+
+    # In cloud mode, generate questions from text only (no images)
+    if USE_MODAL:
+        try:
+            client = Anthropic(api_key=settings.anthropic_api_key)
+            resp = client.messages.create(
+                model=settings.answer_model,
+                max_tokens=300,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        f"Generate exactly 5 specific analyst questions for a financial document "
+                        f"with doc_id '{doc_id}'. Return ONLY a JSON array of 5 strings, no other text."
+                    )
+                }],
+            )
+            raw = "".join(b.text for b in resp.content if b.type == "text").strip()
+            questions = json.loads(raw)
+            return {"questions": questions[:5]}
+        except Exception:
+            return {"questions": GENERIC}
+
+    # Local mode: use actual page images for better questions
+    if _embedder is None:
+        return {"questions": GENERIC}
+
+    try:
+        query_vec = _embedder.embed_query("revenue income financial results")
+        hits = _store.search(query_vec, limit=2, doc_id_filter=doc_id)
+    except Exception:
+        return {"questions": GENERIC}
+
+    if not hits:
+        return {"questions": GENERIC}
+
+    content = []
+    for h in hits:
+        image_path = h.payload.get("image_path", "")
+        try:
+            with open(image_path, "rb") as f:
+                data = base64.standard_b64encode(f.read()).decode()
+            content.append({
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/jpeg", "data": data}
+            })
+        except (FileNotFoundError, OSError):
+            continue
+
+    if not content:
+        return {"questions": GENERIC}
+
+    content.append({
+        "type": "text",
+        "text": (
+            "Based on these document pages, generate exactly 5 specific useful questions "
+            "an analyst would ask. Return ONLY a JSON array of 5 strings, no other text."
+        )
+    })
+
+    try:
+        client = Anthropic(api_key=settings.anthropic_api_key)
+        resp = client.messages.create(
+            model=settings.answer_model,
+            max_tokens=300,
+            messages=[{"role": "user", "content": content}],
+        )
+        raw = "".join(b.text for b in resp.content if b.type == "text").strip()
+        questions = json.loads(raw)
+        return {"questions": questions[:5]}
+    except Exception:
+        return {"questions": GENERIC}
