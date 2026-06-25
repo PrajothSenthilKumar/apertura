@@ -47,7 +47,6 @@ def retriever_node(state: PipelineState) -> PipelineState:
     if _embedder is not None:
         query_vec = _embedder.embed_query(state.question)
     else:
-        # Cloud/Modal mode — embed query via Modal GPU
         import os, asyncio
         if os.getenv("USE_MODAL", "false").lower() == "true":
             from apertura.ingestion.modal_client import embed_via_modal
@@ -64,6 +63,15 @@ def retriever_node(state: PipelineState) -> PipelineState:
                 raise RuntimeError(f"Modal embed failed: {e}")
         else:
             raise RuntimeError("No embedder available")
+
+    results = _store.search(
+        query_vectors=query_vec,
+        doc_id=state.doc_id,
+        top_k=settings.top_k_pages,
+    )
+    state.retrieved_pages = results          # list of dicts with score, page_num, image_path
+    state.latencies["retriever"] = round(time.time() - t0, 3)
+    return state
 
 
 # ── Node 3: Reranker ──────────────────────────────────────────────────────
