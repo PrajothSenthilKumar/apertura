@@ -43,20 +43,27 @@ def router_node(state: PipelineState) -> PipelineState:
 def retriever_node(state: PipelineState) -> PipelineState:
     t0 = time.time()
     settings = get_settings()
-    query_vec = _embedder.embed_query(state.question)
-    hits = _store.search(query_vec, limit=settings.top_k_pages + 2)  # fetch extra for reranker
 
-    state.retrieved_pages = [
-        {
-            "page_num":   h.payload["page_num"],
-            "image_path": h.payload["image_path"],
-            "doc_id":     h.payload.get("doc_id", ""),
-            "score":      h.score,
-        }
-        for h in hits
-    ]
-    state.latencies["retriever"] = round(time.time() - t0, 3)
-    return state
+    if _embedder is not None:
+        query_vec = _embedder.embed_query(state.question)
+    else:
+        # Cloud/Modal mode — embed query via Modal GPU
+        import os, asyncio
+        if os.getenv("USE_MODAL", "false").lower() == "true":
+            from apertura.ingestion.modal_client import embed_via_modal
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor() as pool:
+                        future = pool.submit(asyncio.run, embed_via_modal(state.question))
+                        query_vec = future.result()
+                else:
+                    query_vec = loop.run_until_complete(embed_via_modal(state.question))
+            except Exception as e:
+                raise RuntimeError(f"Modal embed failed: {e}")
+        else:
+            raise RuntimeError("No embedder available")
 
 
 # ── Node 3: Reranker ──────────────────────────────────────────────────────
