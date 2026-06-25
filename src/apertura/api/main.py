@@ -1,14 +1,3 @@
-"""Apertura FastAPI gateway.
-
-Loads ColQwen2.5 locally (dev) or delegates to Modal GPU (production).
-Serves:
-  POST /ingest              — index a PDF
-  POST /query               — LangGraph pipeline answer
-  GET  /suggest-questions   — sample questions for the document
-  GET  /pages/*             — static page image serving (local only)
-  GET  /health              — liveness check
-"""
-
 import json
 import os
 from contextlib import asynccontextmanager
@@ -17,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from apertura.agents.observability import trace_pipeline_run
@@ -37,7 +27,6 @@ async def lifespan(app: FastAPI):
     global _embedder, _store, _graph
     _store = VectorStore()
     _store.ensure_collection()
-
     if not USE_MODAL:
         from apertura.ingestion.embedder import Embedder
         print("Loading ColQwen2.5 locally …")
@@ -45,42 +34,26 @@ async def lifespan(app: FastAPI):
     else:
         print("Modal mode — skipping local GPU load …")
         _embedder = None
-
     print("Building LangGraph pipeline …")
     _graph = build_pipeline(_embedder, _store)
     print("Ready.")
     yield
 
 
+# ── App + CORS ── middleware MUST be added before any routes ──────────────────
 app = FastAPI(title="Apertura", lifespan=lifespan)
-
-@app.options("/ingest")
-async def options_ingest():
-    return {"ok": True}
-
-@app.options("/query")
-async def options_query():
-    return {"ok": True}
-
-@app.options("/suggest-questions/{doc_id}")
-async def options_suggest(doc_id: str):
-    return {"ok": True}
-
-from starlette.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=600,
+    max_age=86400,
 )
 
-
-
-# Serve page images only in local mode (Render has no persistent disk)
+# Static files only in local mode
 if not USE_MODAL:
     pages_dir = Path("data/pages")
     pages_dir.mkdir(parents=True, exist_ok=True)
@@ -110,17 +83,18 @@ class IngestResponse(BaseModel):
     pages: int
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok", "modal_mode": USE_MODAL}
 
 
-@app.post("/ingest", response_model=IngestResponse)
-async def ingest(file: UploadFile = File(...)):
+@app.api_route("/ingest", methods=["POST", "OPTIONS"])
+async def ingest(file: UploadFile = File(None)):
+    if file is None:
+        return JSONResponse({"ok": True})
     doc_id = Path(file.filename).stem
     pdf_bytes = await file.read()
-
     if USE_MODAL:
         from apertura.ingestion.modal_client import ingest_via_modal
         result = await ingest_via_modal(pdf_bytes, doc_id)
@@ -129,22 +103,19 @@ async def ingest(file: UploadFile = File(...)):
         tmp.parent.mkdir(parents=True, exist_ok=True)
         tmp.write_bytes(pdf_bytes)
         result = ingest_pdf(tmp, doc_id=doc_id, embedder=_embedder, store=_store)
-
     return IngestResponse(doc_id=result["doc_id"], pages=result["pages"])
 
 
-@app.post("/query", response_model=QueryResponse)
-async def query(req: QueryRequest):
+@app.api_route("/query", methods=["POST", "OPTIONS"])
+async def query(req: QueryRequest = None):
+    if req is None:
+        return JSONResponse({"ok": True})
     if not _graph:
         raise HTTPException(status_code=503, detail="Pipeline not ready.")
-
     result = run_pipeline(_graph, question=req.question, doc_id=req.doc_id)
-
     if not result.answer:
-        raise HTTPException(status_code=404, detail="No indexed pages found. Ingest a document first.")
-
+        raise HTTPException(status_code=404, detail="No indexed pages found.")
     trace_url = trace_pipeline_run(req.question, result, req.doc_id)
-
     return QueryResponse(
         answer=result.answer,
         pages=[p["page_num"] for p in result.reranked_pages],
@@ -160,12 +131,6 @@ async def query(req: QueryRequest):
 
 @app.get("/suggest-questions/{doc_id}")
 async def suggest_questions(doc_id: str):
-    """Generate document-specific sample questions.
-
-    In Modal/cloud mode: page images aren't on this server, so we
-    generate questions from a text search of Qdrant metadata instead.
-    In local mode: we use the actual page images for better questions.
-    """
     import base64
     from anthropic import Anthropic
     settings = get_settings()
@@ -178,28 +143,22 @@ async def suggest_questions(doc_id: str):
         "What is the revenue outlook for next quarter?",
     ]
 
-    # In cloud mode, generate questions from text only (no images)
     if USE_MODAL:
         try:
             client = Anthropic(api_key=settings.anthropic_api_key)
             resp = client.messages.create(
                 model=settings.answer_model,
                 max_tokens=300,
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        f"Generate exactly 5 specific analyst questions for a financial document "
-                        f"with doc_id '{doc_id}'. Return ONLY a JSON array of 5 strings, no other text."
-                    )
-                }],
+                messages=[{"role": "user", "content": (
+                    f"Generate exactly 5 specific analyst questions for a financial document "
+                    f"with doc_id '{doc_id}'. Return ONLY a JSON array of 5 strings, no other text."
+                )}],
             )
             raw = "".join(b.text for b in resp.content if b.type == "text").strip()
-            questions = json.loads(raw)
-            return {"questions": questions[:5]}
+            return {"questions": json.loads(raw)[:5]}
         except Exception:
             return {"questions": GENERIC}
 
-    # Local mode: use actual page images for better questions
     if _embedder is None:
         return {"questions": GENERIC}
 
@@ -214,37 +173,26 @@ async def suggest_questions(doc_id: str):
 
     content = []
     for h in hits:
-        image_path = h.payload.get("image_path", "")
         try:
-            with open(image_path, "rb") as f:
-                data = base64.standard_b64encode(f.read()).decode()
-            content.append({
-                "type": "image",
-                "source": {"type": "base64", "media_type": "image/jpeg", "data": data}
-            })
+            with open(h.payload.get("image_path", ""), "rb") as f:
+                data = __import__("base64").standard_b64encode(f.read()).decode()
+            content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
         except (FileNotFoundError, OSError):
             continue
 
     if not content:
         return {"questions": GENERIC}
 
-    content.append({
-        "type": "text",
-        "text": (
-            "Based on these document pages, generate exactly 5 specific useful questions "
-            "an analyst would ask. Return ONLY a JSON array of 5 strings, no other text."
-        )
-    })
+    content.append({"type": "text", "text": (
+        "Based on these document pages, generate exactly 5 specific useful questions "
+        "an analyst would ask. Return ONLY a JSON array of 5 strings, no other text."
+    )})
 
     try:
         client = Anthropic(api_key=settings.anthropic_api_key)
-        resp = client.messages.create(
-            model=settings.answer_model,
-            max_tokens=300,
-            messages=[{"role": "user", "content": content}],
-        )
+        resp = client.messages.create(model=settings.answer_model, max_tokens=300,
+                                       messages=[{"role": "user", "content": content}])
         raw = "".join(b.text for b in resp.content if b.type == "text").strip()
-        questions = json.loads(raw)
-        return {"questions": questions[:5]}
+        return {"questions": json.loads(raw)[:5]}
     except Exception:
         return {"questions": GENERIC}
