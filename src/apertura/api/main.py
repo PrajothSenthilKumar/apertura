@@ -141,16 +141,24 @@ async def suggest_questions(doc_id: str):
     ]
 
     if USE_MODAL:
-        # Get a page image from Qdrant to generate relevant questions
         try:
             import base64
-            from apertura.ingestion.modal_client import embed_via_modal
-            import asyncio, concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, embed_via_modal("revenue financial results"))
-                query_vec = future.result()
+            from anthropic import Anthropic
+            from qdrant_client.models import Filter, FieldCondition, MatchValue
+            settings = get_settings()
 
-            hits = _store.search(query_vec, limit=2, doc_id_filter=doc_id)
+            # Fetch pages directly by doc_id — no Modal GPU call needed
+            results = _store.client.scroll(
+                collection_name=_store.collection,
+                scroll_filter=Filter(
+                    must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]
+                ),
+                limit=2,
+                with_payload=True,
+                with_vectors=False,
+            )
+            hits = results[0]
+
             content = []
             for h in hits:
                 img_b64 = h.payload.get("image_b64", "")
@@ -159,6 +167,7 @@ async def suggest_questions(doc_id: str):
                         "type": "image",
                         "source": {"type": "base64", "media_type": "image/jpeg", "data": img_b64}
                     })
+
             if content:
                 content.append({"type": "text", "text": (
                     "Based on these document pages, generate exactly 5 specific analyst questions. "
