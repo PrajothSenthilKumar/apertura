@@ -49,7 +49,13 @@ app = FastAPI(title="Apertura", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://apertura-rho.vercel.app",
+        "https://apertura.vercel.app",
+        "http://localhost:3000",
+        "*",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
