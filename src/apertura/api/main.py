@@ -6,6 +6,7 @@ Loads ColQwen2.5 and the Qdrant client once at startup, then serves:
   GET  /health  — liveness check
 """
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -148,11 +149,13 @@ async def ingest(file: UploadFile = File(...)):
     doc_id = Path(file.filename).stem
     pdf_bytes = await file.read()
 
-    from apertura.ingestion.modal_client import is_modal_enabled, ingest_via_modal
-    if is_modal_enabled():
-        result = ingest_via_modal(pdf_bytes, doc_id)
+    use_modal = os.getenv("USE_MODAL", "false").lower() == "true"
+
+    if use_modal:
+        from apertura.ingestion.modal_client import ingest_via_modal
+        result = await ingest_via_modal(pdf_bytes, doc_id)
     else:
-        tmp = Path("data/uploads") / file.filename
+        tmp = Path("data/uploads") / f"{doc_id}.pdf"
         tmp.parent.mkdir(parents=True, exist_ok=True)
         tmp.write_bytes(pdf_bytes)
         result = ingest_pdf(tmp, doc_id=doc_id, embedder=_embedder, store=_store)
