@@ -30,10 +30,15 @@ _graph = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _embedder, _store, _graph
-    print("Loading ColQwen2.5 …")
-    _embedder = Embedder()
+    from apertura.ingestion.modal_client import is_modal_enabled
     _store = VectorStore()
     _store.ensure_collection()
+    if not is_modal_enabled():
+        print("Loading ColQwen2.5 locally …")
+        _embedder = Embedder()
+    else:
+        print("Modal mode — skipping local GPU load …")
+        _embedder = None
     print("Building LangGraph pipeline …")
     _graph = build_pipeline(_embedder, _store)
     print("Ready.")
@@ -134,12 +139,18 @@ def suggest_questions(doc_id: str):
 
 @app.post("/ingest", response_model=IngestResponse)
 async def ingest(file: UploadFile = File(...)):
-    """Upload and index a PDF. doc_id is derived from the filename."""
     doc_id = Path(file.filename).stem
-    tmp = Path("data/uploads") / file.filename
-    tmp.parent.mkdir(parents=True, exist_ok=True)
-    tmp.write_bytes(await file.read())
-    result = ingest_pdf(tmp, doc_id=doc_id, embedder=_embedder, store=_store)
+    pdf_bytes = await file.read()
+
+    from apertura.ingestion.modal_client import is_modal_enabled, ingest_via_modal
+    if is_modal_enabled():
+        result = ingest_via_modal(pdf_bytes, doc_id)
+    else:
+        tmp = Path("data/uploads") / file.filename
+        tmp.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_bytes(pdf_bytes)
+        result = ingest_pdf(tmp, doc_id=doc_id, embedder=_embedder, store=_store)
+
     return IngestResponse(doc_id=result["doc_id"], pages=result["pages"])
 
 
