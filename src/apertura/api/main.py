@@ -91,7 +91,13 @@ async def ingest(file: UploadFile = File(None)):
     if file is None:
         return JSONResponse({"ok": True})
     doc_id = Path(file.filename).stem
+    # Limiting the file size to 10MB (~30-40 pages for a typical filing)
     pdf_bytes = await file.read()
+    if len(pdf_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413, 
+            detail="File too large. Please upload PDFs under 10MB (~30 pages)."
+        )
     if USE_MODAL:
         from apertura.ingestion.modal_client import ingest_via_modal
         result = await ingest_via_modal(pdf_bytes, doc_id)
