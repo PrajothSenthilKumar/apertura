@@ -4,6 +4,8 @@
 
 **Live demo:** https://apertura-rho.vercel.app &nbsp;|&nbsp; [GitHub](https://github.com/PrajothSenthilKumar/apertura)
 
+<img width="1917" height="990" alt="image" src="https://github.com/user-attachments/assets/bead9a4c-b55f-47eb-b2f3-8549a21ebc9b" />
+
 ---
 
 ## Demo
@@ -17,6 +19,10 @@ Apertura reads the multi column reconciliation table directly from the page imag
 > *GAAP net income was $58,321M vs Non-GAAP net income of $45,548M. The $12,773M difference is primarily driven by a $15,936M gain from equity securities excluded under Non-GAAP reporting, partially offset by a $2,890M income tax adjustment.*
 
 Text extraction RAG cannot answer this --> --> the reconciliation table structure is destroyed by OCR. Apertura reads the rendered page image and gets it right.
+
+<img width="1917" height="1047" alt="image" src="https://github.com/user-attachments/assets/1cce9a93-a57f-4797-adc2-d0801fb320b5" />
+
+<img width="1917" height="1046" alt="image" src="https://github.com/user-attachments/assets/cbb62607-e0cf-4c6e-b4d4-3ca9c85e2ff0" />
 
 ---
 
