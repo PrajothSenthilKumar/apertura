@@ -1,6 +1,6 @@
 # Apertura
 
-**Multimodal financial document RAG** — answers questions from the charts and tables in your documents, not just the text.
+**Multimodal financial document RAG** --- answers questions from the charts and tables in your documents, not just the text.
 
 **Live demo:** https://apertura-rho.vercel.app &nbsp;|&nbsp; [GitHub](https://github.com/PrajothSenthilKumar/apertura)
 
@@ -12,36 +12,36 @@ Ask Apertura about NVIDIA's Q1 FY2027 8-K:
 
 > **"What was GAAP vs non-GAAP net income and what explains the difference?"**
 
-Apertura reads the multi-column reconciliation table directly from the page image and answers:
+Apertura reads the multi column reconciliation table directly from the page image and answers:
 
 > *GAAP net income was $58,321M vs Non-GAAP net income of $45,548M. The $12,773M difference is primarily driven by a $15,936M gain from equity securities excluded under Non-GAAP reporting, partially offset by a $2,890M income tax adjustment.*
 
-Text-extraction RAG cannot answer this — the reconciliation table structure is destroyed by OCR. Apertura reads the rendered page image and gets it right.
+Text extraction RAG cannot answer this --> --> the reconciliation table structure is destroyed by OCR. Apertura reads the rendered page image and gets it right.
 
 ---
 
 ## Results
 
-Evaluated on a 30-question golden set against Apple's Q1 2026 Form 10-Q:
+Evaluated on a 30 question golden set against Apple's Q1 2026 Form 10-Q:
 
 | System | Answer Accuracy | Table Questions | Retrieval Accuracy |
 |---|---|---|---|
 | Apertura (visual RAG) | **96.7%** | **96.4%** | 83.3% |
 | Text-RAG baseline | 76.7% | 78.6% | 53.3% |
 
-**+17.8% lift on table and chart questions** — the content that text extraction destroys.
+**+17.8% lift on table and chart questions** --> the content that text extraction destroys.
 
 ---
 
 ## What it does
 
-Upload any financial filing (10-K, 10-Q, 8-K, earnings deck). Apertura embeds every page as an image using ColQwen2.5, retrieves the most relevant pages visually with Qdrant's multi-vector MaxSim index, and answers with Claude reading the actual table or chart.
+Upload any financial filing (10-K, 10-Q, 8-K, earnings deck). Apertura embeds every page as an image using ColQwen2.5, retrieves the most relevant pages visually with Qdrant's multi vector MaxSim index, and answers with Claude reading the actual table or chart.
 
 Every answer comes with:
 - Confidence score and verification status
 - Source page citations
 - Actual page thumbnails showing exactly where the answer came from
-- Per-agent latency breakdown
+- Per agent latency breakdown
 
 ---
 
@@ -70,7 +70,7 @@ Every answer comes with:
           ▼               │          └──────────┬──────────┘  │
 ┌─────────────────────┐   │                     │             │
 │   Qdrant Cloud      │   │          ┌──────────▼──────────┐  │
-│  multi-vector index │◄──┘          │  Answerer (Claude)  │  │
+│  multi vector index │◄──┘          │  Answerer (Claude)  │  │
 │  MaxSim scoring     │              │  reads image_b64    │  │
 │  image_b64 payload  │              │  from Qdrant        │  │
 └─────────────────────┘              └──────────┬──────────┘  │
@@ -83,7 +83,7 @@ Every answer comes with:
                                      └───────────────────────┘
 ```
 
-**Why visual retrieval beats text extraction:** ColQwen2.5 embeds the rendered page image directly — preserving tables, charts, and layout that OCR destroys. Page images are stored as base64 in Qdrant's payload so they travel with the vectors and are always available wherever the query runs, including cloud deployments with no local disk.
+**Why visual retrieval beats text extraction:** ColQwen2.5 embeds the rendered page image directly by preserving tables, charts, and layout that OCR destroys. Page images are stored as base64 in Qdrant's payload so they travel with the vectors and are always available wherever the query runs, including cloud deployments with no local disk.
 
 ---
 
@@ -92,16 +92,16 @@ Every answer comes with:
 | Layer | Technology |
 |---|---|
 | Visual retrieval model | ColQwen2.5 (`vidore/colqwen2.5-v0.2`) |
-| Vector database | Qdrant Cloud (multi-vector, MaxSim, image_b64 payload) |
-| Agent orchestration | LangGraph — 5-node pipeline with retry loop |
+| Vector database | Qdrant Cloud (multi vector, MaxSim, image_b64 payload) |
+| Agent orchestration | LangGraph with 5 nodes (Agents) pipeline with retry loop |
 | Vision answerer | Claude (`claude-sonnet-4-6`) |
-| Query router | Claude Haiku (zero-shot classification) |
-| GPU inference | Modal.com (serverless T4, pay-per-call) |
+| Query router | Claude Haiku (zero shot classification) |
+| GPU inference | Modal.com (serverless T4, pay per call) |
 | API gateway | FastAPI (Render.com free tier) |
 | PDF rendering | pdf2image + poppler |
 | Frontend | Next.js + Tailwind CSS (Vercel) |
 | Observability | Langfuse traces + cost tracking |
-| Eval framework | 30-question golden set + text-RAG baseline |
+| Eval framework | 30-question golden set + text RAG baseline |
 | Containerization | Docker (3 microservices) |
 | Orchestration | Kubernetes manifests (local kind) |
 | Async ingestion | AWS Lambda architecture |
@@ -127,12 +127,10 @@ User browser
     │                                   Claude vision reads image_b64
     │
     └── Vector store ───────────── Qdrant Cloud (free 1GB tier)
-                                       Stores multi-vectors + image_b64
+                                       Stores multi vectors + image_b64
 ```
 
-**Cost at portfolio scale (~50 queries/month):** ~$0-5/month total.
-
-**Cold start note:** First query after idle has a ~30s cold start (Modal GPU spinning up + ColQwen2.5 loading). Subsequent queries are ~8-10s. This is the trade-off for serverless GPU.
+**Cold start note:** First query after idle has a ~30s cold start (Modal GPU spinning up + ColQwen2.5 loading). Subsequent queries are ~8-10s. This is the trade off for serverless GPU.
 
 ---
 
@@ -171,7 +169,7 @@ python scripts/serve.py
 cd frontend && npm install && npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`
 
 ---
 
@@ -182,7 +180,7 @@ Open `http://localhost:3000`.
 python scripts/ingest.py path/to/filing.pdf --doc-id apple-10q
 ```
 
-**Or upload through the UI** — drag and drop any PDF.
+**Or upload through the UI** --> drag and drop any PDF.
 
 **Good document sources:**
 - SEC EDGAR: `https://www.sec.gov/cgi-bin/browse-edgar`
@@ -199,12 +197,12 @@ python scripts/ask.py "What was total net sales for the quarter?"
 
 ## Evaluation
 
-**Full eval — visual RAG vs text-RAG baseline (30 questions, ~15 min):**
+**Full eval --> visual RAG vs text RAG baseline (30 questions, ~15 min):**
 ```bash
 python scripts/run_eval.py --pdf 10QQ12026.pdf --doc-id apple-10q
 ```
 
-**CI gate — 10 questions, fails if accuracy drops below 80%:**
+**CI gate --> 10 questions, fails if accuracy drops below 80%:**
 ```bash
 python scripts/run_ci_eval.py --pdf 10QQ12026.pdf
 ```
@@ -218,14 +216,14 @@ Apertura Visual RAG
   Text questions      : 100.0%
   Avg latency         : 4.15s
 
-Text-RAG Baseline
+Text RAG Baseline
   Retrieval accuracy  : 53.3%
   Answer hit rate     : 76.7%
   Table questions     : 78.6%
   Text questions      : 50.0%
   Avg latency         : 2.28s
 
-★  Table-question lift: Apertura beats text RAG by 17.8%
+★  Table question lift: Apertura beats text RAG by 17.8%
 ```
 
 ---
@@ -238,7 +236,7 @@ LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_SECRET_KEY=sk-lf-...
 ```
 
-Every pipeline run is traced with per-agent latency, token cost, confidence score, and a direct link to the Langfuse dashboard. The UI shows a "View trace in Langfuse →" link on every answer.
+Every pipeline run is traced with per agent latency, token cost, confidence score, and a direct link to the Langfuse dashboard. The UI shows a "View trace in Langfuse →" link on every answer, if the keys are added
 
 ---
 
@@ -258,7 +256,7 @@ kubectl apply -f k8s/ -n apertura
 kubectl get pods -n apertura -w
 ```
 
-**Lambda async ingestion:** See `lambda/ARCHITECTURE.md` for the async S3-triggered ingestion architecture that decouples PDF processing from the query path.
+**Lambda async ingestion:** See `lambda/ARCHITECTURE.md` for the async S3-triggered ingestion architecture that decouples PDF processing from the query path
 
 ---
 
@@ -308,7 +306,7 @@ apertura/
 
 Read the full technical writeup: [`blog/post.md`](blog/post.md)
 
-Covers the visual retrieval architecture, the baseline study methodology, the transformers version compatibility issue that caused non-deterministic retrieval, and lessons learned building a production RAG system with LangGraph and Langfuse.
+Covers the visual retrieval architecture, the baseline study methodology, the transformers version compatibility issue that caused non deterministic retrieval, and lessons learned building a production RAG system with LangGraph and Langfuse.
 
 ---
 
