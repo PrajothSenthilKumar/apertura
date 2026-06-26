@@ -125,8 +125,8 @@ export default function Home() {
           Apertura reads them.
         </h1>
         <p className="text-gray-400 max-w-xl mx-auto text-base leading-relaxed mb-6">
-          Upload a financial filing. Apertura embeds every page as an image, retrieves
-          visually, and answers with a cited source page — no OCR, no text extraction.
+          Upload a financial filing. Apertura embeds every page as an image, retrieves visually, 
+          and answers with a cited source page completely bypassing OCR and text extraction
         </p>
         <div className="flex justify-center gap-6 text-sm">
           <span className="text-teal-400 font-semibold">96.7% accuracy</span>
