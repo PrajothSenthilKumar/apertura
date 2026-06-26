@@ -8,7 +8,7 @@
 
 ## Demo
 
-Ask Apertura about NVIDIA's Q1 FY2027 8-K:
+Ask Apertura about NVIDIA's Q1 FY2027 8-K:-
 
 > **"What was GAAP vs non-GAAP net income and what explains the difference?"**
 
