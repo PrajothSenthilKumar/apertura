@@ -44,10 +44,10 @@ Evaluated on a 30 question golden set against Apple's Q1 2026 Form 10-Q:
 Upload any financial filing (10-K, 10-Q, 8-K, earnings deck). Apertura embeds every page as an image using ColQwen2.5, retrieves the most relevant pages visually with Qdrant's multi vector MaxSim index, and answers with Claude reading the actual table or chart.
 
 Every answer comes with:
-- Confidence score and verification status
-- Source page citations
-- Actual page thumbnails showing exactly where the answer came from
-- Per agent latency breakdown
+-> Confidence score and verification status
+-> Source page citations
+-> Actual page thumbnails showing exactly where the answer came from
+-> Per agent latency breakdown
 
 ---
 
